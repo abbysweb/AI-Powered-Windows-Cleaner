@@ -15,8 +15,10 @@ This project uses an **Industry-Standard Hybrid Architecture**:
 - **System Scanner (Phase 1 & 2):** Scans disk usage, RAM, CPU, OS details, and categorizes storage waste (Windows Temp, Downloads, Recycle Bin).
 - **Premium Dashboard (Phase 3):** A sleek, dark-mode PySide6 interface that visualizes storage usage (via PyQtGraph) and health scores.
 - **Safe Cleaning Engine (Phase 4):** A quarantine-first cleaning engine. High-risk deletions are backed up locally for safe rollback.
-- **AI Advisor (Upcoming):** Natural language justifications for why files are marked for deletion.
-- **Automated Maintenance (Upcoming):** Background scheduling using Windows Task Scheduler integration.
+- **AI Advisor Client (Phase 5):** Natural language justifications for why files are marked for deletion, powered by a local Podman AI container.
+- **Deep File Scanner (Phase 6):** Advanced hashlib-based duplicate file scanning and customizable large file detection.
+- **Personalization Engine (Phase 7):** SQLite-based history logs, custom user preferences, and dynamic ignore lists.
+- **Automated Maintenance (Upcoming - Phase 8):** Background scheduling using Windows Task Scheduler integration.
 
 ## Installation & Setup
 
@@ -58,8 +60,6 @@ Every phase undergoes:
 - 100% Linting (Ruff/Black)
 - Unit Testing (Pytest)
 - A formally generated **Diagnosis Report** before approval.
-
-See `AGENTS.md` for the strict contributor guidelines.
 
 ## Roadmap
 
