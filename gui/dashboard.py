@@ -65,6 +65,15 @@ class DashboardWidget(QWidget):
         actions_layout.addWidget(btn_clean)
         grid.addWidget(actions_card, 1, 1)
 
+        # AI Advisor Card
+        advisor_card = self.create_card("AI Advisor")
+        advisor_layout = QVBoxLayout(advisor_card)
+        self.advisor_label = QLabel("Run a scan to get AI recommendations...")
+        self.advisor_label.setWordWrap(True)
+        self.advisor_label.setStyleSheet("color: #E0E0E0; font-style: italic;")
+        advisor_layout.addWidget(self.advisor_label)
+        grid.addWidget(advisor_card, 2, 0, 1, 2)
+
         main_layout.addLayout(grid)
 
     def create_card(self, title: str) -> QFrame:
