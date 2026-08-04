@@ -1,7 +1,7 @@
 import sys
 import logging
 from PySide6.QtWidgets import QApplication
-from gui.dashboard import DashboardWidget
+from gui.main_window import MainWindow
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("AIHealthCopilot")
@@ -15,8 +15,7 @@ def main():
         QWidget { background-color: #1E1E1E; color: #FFFFFF; font-family: 'Segoe UI', sans-serif; }
     """)
     
-    window = DashboardWidget()
-    window.resize(1024, 768)
+    window = MainWindow()
     window.show()
     
     sys.exit(app.exec())
