@@ -155,6 +155,81 @@ sequenceDiagram
 
 ---
 
+## 📁 Project Structure
+
+```
+AI-Powered-Windows-Cleaner/
+├── README.md                          # Project documentation
+├── AGENTS.md                          # AI agent development guide (local only)
+├── PHASE_15_PLAN.md                   # Phase 15 implementation plan
+├── requirements.txt                   # Host Python dependencies
+├── pyproject.toml                     # Ruff / Mypy / Pytest configuration
+├── settings.json                      # Runtime settings (profile, exclusions)
+├── podman-compose.yml                 # FastAPI + Ollama container stack
+├── run_bot.py                         # One-click Run Bot launcher
+├── run_bot.bat                        # Double-click wrapper for run_bot.py
+│
+├── backend/                           # Containerised AI backend
+│   ├── main.py                        # FastAPI app (POST /api/advisor)
+│   ├── requirements.txt               # Backend Python dependencies
+│   └── Containerfile                  # python:3.12-slim image
+│
+├── config/                            # Shared config package (reserved)
+│   └── __init__.py
+│
+├── src/ai_health_copilot/             # Main application package
+│   ├── main.py                        # Entry point (QApplication + MainWindow)
+│   ├── ai/
+│   │   └── advisor.py                 # AI backend HTTP client
+│   ├── core/
+│   │   ├── analyzer/                  # Recommendation engine (reserved)
+│   │   ├── cleaner/
+│   │   │   ├── base.py                # BaseCleaner ABC (quarantine-first delete)
+│   │   │   ├── windows_temp.py        # Windows Temp scan/clean
+│   │   │   ├── downloads.py           # Downloads scan/clean (ignore-list aware)
+│   │   │   └── recycle_bin.py         # Recycle Bin empty via ctypes
+│   │   ├── duplicate/
+│   │   │   └── scanner.py             # Content-aware duplicate detection
+│   │   ├── logger/                    # Logging (reserved)
+│   │   ├── rollback/
+│   │   │   └── manager.py             # QuarantineManager (backup / restore)
+│   │   ├── scanner/
+│   │   │   ├── large_files.py         # Large-file scanner
+│   │   │   └── system_info.py         # psutil system metrics
+│   │   └── scheduler/
+│   │       └── manager.py             # Windows Task Scheduler integration
+│   ├── database/
+│   │   ├── manager.py                 # SQLite CRUD (history, prefs, ignores)
+│   │   └── schema.sql                 # Database schema
+│   ├── gui/
+│   │   ├── main_window.py             # Sidebar navigation + stacked views
+│   │   ├── widgets/                   # Reusable widgets (reserved)
+│   │   └── views/
+│   │       ├── overview.py            # Dashboard (live metrics, disk chart)
+│   │       ├── scanner_results.py     # Deep scan results + deletion workers
+│   │       ├── ai_chat.py             # AI Health Advisor chat
+│   │       └── history.py             # History & rollback table
+│   └── scripts/
+│       ├── build.py                   # PyInstaller build script
+│       └── system_diagnosis.py        # Full quality-gate audit (100/100)
+│
+├── tests/                             # Pytest suite (49 tests)
+│   ├── gui/                           # Qt widget tests (pytest-qt)
+│   ├── test_*.py                      # Unit & integration tests
+│   └── performance_test.py            # Performance/load smoke test
+│
+├── cache/                             # Runtime-generated (quarantine) — gitignored
+├── database/storage.db                # Runtime SQLite database — gitignored
+├── logs/                              # Runtime logs — gitignored
+├── build/ & dist/                     # PyInstaller output — gitignored
+└── scratch/                           # Throwaway AI helper scripts — gitignored
+```
+
+> `cache/`, `database/storage.db`, `logs/`, `build/`, `dist/`, and `scratch/` are
+> created at runtime and excluded from version control.
+
+---
+
 ## ✨ Features (Current — All Implemented)
 
 ### 🖥 Dashboard
