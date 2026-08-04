@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
+
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
@@ -50,7 +50,9 @@ class MainWindow(QMainWindow):
 
         # App Title in Sidebar
         title_label = QLabel("Health Copilot")
-        title_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #FFFFFF; padding-left: 20px; padding-bottom: 20px; border: none;")
+        title_label.setStyleSheet(
+            "font-size: 20px; font-weight: bold; color: #FFFFFF; padding-left: 20px; padding-bottom: 20px; border: none;"
+        )
         sidebar_layout.addWidget(title_label)
 
         # Navigation Buttons
@@ -64,8 +66,10 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(self.btn_scanner)
         sidebar_layout.addWidget(self.btn_ai_chat)
         sidebar_layout.addWidget(self.btn_history)
-        
-        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        spacer = QSpacerItem(
+            20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
         sidebar_layout.addItem(spacer)
         sidebar_layout.addWidget(self.btn_settings)
 
@@ -79,8 +83,8 @@ class MainWindow(QMainWindow):
         self.view_overview = OverviewWidget()
         self.view_scanner = ScannerResultsWidget()
         self.view_ai_chat = AIChatWidget()
-        self.view_history = QWidget() # Placeholder for history
-        self.view_settings = QWidget() # Placeholder for settings
+        self.view_history = QWidget()  # Placeholder for history
+        self.view_settings = QWidget()  # Placeholder for settings
 
         self.stacked_widget.addWidget(self.view_overview)
         self.stacked_widget.addWidget(self.view_scanner)

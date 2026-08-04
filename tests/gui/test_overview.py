@@ -14,8 +14,15 @@ def app():
     yield app
 
 
-def test_overview_creation(app):
+def test_overview_creation(app, qtbot):
     overview = OverviewWidget()
-    assert overview is not None
-    assert overview.storage_plot is not None
+    qtbot.addWidget(overview)
+
+    # Assert layout and basic properties
     assert overview.layout() is not None
+    assert overview.storage_plot is not None
+
+    # Test card creation method
+    card = overview.create_card("Test Card")
+    assert card is not None
+    assert card.layout() is not None

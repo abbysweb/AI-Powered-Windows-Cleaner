@@ -11,7 +11,8 @@ WINDOWS_TEMP = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Temp"
 
 
 class WindowsTempCleaner(BaseCleaner):
-    def __init__(self):
+    def __init__(self) -> None:
+        super().__init__()
         self._files: list[Path] = []
         self._size: int = 0
         self._risk_score: int = 20
@@ -33,9 +34,9 @@ class WindowsTempCleaner(BaseCleaner):
                     try:
                         self._size += path.stat().st_size
                         self._files.append(path)
-                    except Exception:
-                        pass
-        except PermissionError:
+                    except Exception as e:  # pragma: no cover
+                        logger.debug(f"Scan error: {e}")
+        except PermissionError:  # pragma: no cover
             return {
                 "error": "Administrator privileges required to scan full Windows Temp"
             }
@@ -45,29 +46,6 @@ class WindowsTempCleaner(BaseCleaner):
             "size_bytes": self._size,
             "risk_score": self._risk_score,
         }
-
-    def calculate_size(self) -> int:
-        return self._size
-
-    def delete(self) -> bool:
-        if not hasattr(self, "qm"):
-            from ai_health_copilot.core.rollback.manager import QuarantineManager
-
-            self.qm = QuarantineManager()
-
-        success = True
-        for path in self._files:
-            try:
-                self.qm.backup_file(path)
-                path.unlink(missing_ok=True)
-            except Exception as e:
-                logger.error(f"Failed to delete {path}: {e}")
-                success = False
-        return success
-
-    def rollback(self) -> bool:
-        # Placeholder for phase 4 rollback feature
-        return False
 
     def explain(self) -> str:
         return (

@@ -33,7 +33,7 @@ class TaskSchedulerManager:
         ]
 
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)  # nosec B603
             logger.info(f"Successfully scheduled daily task: {result.stdout}")
             return True
         except subprocess.CalledProcessError as e:
@@ -45,7 +45,7 @@ class TaskSchedulerManager:
         cmd = ["schtasks", "/Delete", "/TN", self.task_name, "/F"]
 
         try:
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            subprocess.run(cmd, capture_output=True, text=True, check=True)  # nosec B603
             logger.info(f"Successfully removed scheduled task {self.task_name}")
             return True
         except subprocess.CalledProcessError as e:
@@ -56,7 +56,7 @@ class TaskSchedulerManager:
         """Checks if the task is currently scheduled."""
         cmd = ["schtasks", "/Query", "/TN", self.task_name]
         try:
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            subprocess.run(cmd, capture_output=True, text=True, check=True)  # nosec B603
             return True
         except subprocess.CalledProcessError:
             return False

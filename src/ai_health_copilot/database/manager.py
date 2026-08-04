@@ -13,7 +13,9 @@ class DatabaseManager:
         schema_path: str | None = None,
     ):
         self.db_path = Path(db_path)
-        self.schema_path = Path(schema_path) if schema_path else Path(__file__).parent / "schema.sql"
+        self.schema_path = (
+            Path(schema_path) if schema_path else Path(__file__).parent / "schema.sql"
+        )
         self._init_db()
 
     def _init_db(self):

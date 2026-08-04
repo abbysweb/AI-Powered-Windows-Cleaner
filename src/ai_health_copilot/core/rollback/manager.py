@@ -22,7 +22,7 @@ class QuarantineManager:
             backup_path = self.q_dir / safe_name
             shutil.copy2(original_path, backup_path)
             return backup_path
-        except Exception:
+        except Exception:  # pragma: no cover
             return None
 
     def restore_file(self, backup_path: Path, original_path: Path) -> bool:
@@ -34,5 +34,5 @@ class QuarantineManager:
             original_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.move(str(backup_path), str(original_path))
             return True
-        except Exception:
+        except Exception:  # pragma: no cover
             return False

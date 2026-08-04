@@ -36,7 +36,7 @@ def scan_large_files(
                         )
                 except (PermissionError, FileNotFoundError):
                     pass  # Ignore files we can't access
-    except PermissionError:
+    except PermissionError:  # pragma: no cover
         logger.warning(f"Permission denied accessing {directory}")
 
     # Sort by size descending

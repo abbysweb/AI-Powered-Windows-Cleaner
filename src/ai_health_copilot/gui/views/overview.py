@@ -31,19 +31,19 @@ class OverviewWidget(QWidget):
         # Storage Pie Chart
         storage_card = self.create_card("System Storage")
         storage_layout = QVBoxLayout(storage_card)
-        
+
         self.storage_plot = pg.PlotWidget()
         self.storage_plot.setBackground("transparent")
         self.storage_plot.setMouseEnabled(x=False, y=False)
-        self.storage_plot.hideAxis('left')
-        self.storage_plot.hideAxis('bottom')
-        
+        self.storage_plot.hideAxis("left")
+        self.storage_plot.hideAxis("bottom")
+
         # Add a dummy bar graph representing space for now (PyQtGraph pie charts are complex to set up quickly, bar chart is cleaner)
         x = [1, 2]
-        y = [438, 74] # Used vs Free
-        bg1 = pg.BarGraphItem(x=x, height=y, width=0.6, brushes=['#E53935', '#4CAF50'])
+        y = [438, 74]  # Used vs Free
+        bg1 = pg.BarGraphItem(x=x, height=y, width=0.6, brushes=["#E53935", "#4CAF50"])
         self.storage_plot.addItem(bg1)
-        
+
         storage_layout.addWidget(self.storage_plot)
         grid.addWidget(storage_card, 0, 0, 2, 1)
 
@@ -61,8 +61,12 @@ class OverviewWidget(QWidget):
         actions_layout = QVBoxLayout(actions_card)
         btn_scan = QPushButton("Start Deep Scan")
         btn_clean = QPushButton("Quick Clean")
-        btn_scan.setStyleSheet("padding: 12px; font-size: 14px; background-color: #2196F3; color: white; border-radius: 6px; font-weight: bold;")
-        btn_clean.setStyleSheet("padding: 12px; font-size: 14px; background-color: #FF9800; color: white; border-radius: 6px; font-weight: bold;")
+        btn_scan.setStyleSheet(
+            "padding: 12px; font-size: 14px; background-color: #2196F3; color: white; border-radius: 6px; font-weight: bold;"
+        )
+        btn_clean.setStyleSheet(
+            "padding: 12px; font-size: 14px; background-color: #FF9800; color: white; border-radius: 6px; font-weight: bold;"
+        )
         btn_scan.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_clean.setCursor(Qt.CursorShape.PointingHandCursor)
         actions_layout.addWidget(btn_scan)

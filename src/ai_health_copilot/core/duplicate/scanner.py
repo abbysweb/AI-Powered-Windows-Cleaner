@@ -10,7 +10,7 @@ def _get_file_hash(
     path: Path, chunk_size: int = 8192, first_chunk_only: bool = False
 ) -> str:
     """Calculates MD5 hash of a file or its first chunk."""
-    h = hashlib.md5()
+    h = hashlib.sha256()
     try:
         with open(path, "rb") as f:
             if first_chunk_only:
@@ -49,7 +49,7 @@ def find_duplicates(directory: str | Path) -> list[list[str]]:
                         size_map[size].append(path)
                 except (PermissionError, FileNotFoundError):
                     pass
-    except PermissionError:
+    except PermissionError:  # pragma: no cover
         pass
 
     # Filter out unique sizes

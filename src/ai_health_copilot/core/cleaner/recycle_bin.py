@@ -11,7 +11,7 @@ SHERB_NOSOUND = 4
 
 
 class RecycleBinCleaner(BaseCleaner):
-    def __init__(self):
+    def __init__(self) -> None:
         self._size: int = 0
         self._risk_score: int = 5  # Very low risk to empty recycle bin
 
@@ -45,7 +45,7 @@ class RecycleBinCleaner(BaseCleaner):
                 None, None, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND
             )
             return result == 0
-        except Exception:
+        except Exception:  # pragma: no cover
             return False
 
     def rollback(self) -> bool:

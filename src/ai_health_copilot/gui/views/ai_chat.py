@@ -29,7 +29,9 @@ class AIChatWidget(QWidget):
         self.chat_area.setStyleSheet(
             "QTextEdit { background-color: #242424; color: #E0E0E0; border: 1px solid #333333; border-radius: 8px; padding: 10px; font-size: 14px; }"
         )
-        self.chat_area.append("<b>AI Advisor:</b> Hello! I'm your Windows Health Copilot. I can explain any cleanup recommendations or system health issues. How can I help you today?")
+        self.chat_area.append(
+            "<b>AI Advisor:</b> Hello! I'm your Windows Health Copilot. I can explain any cleanup recommendations or system health issues. How can I help you today?"
+        )
         layout.addWidget(self.chat_area)
 
         # Input Area
@@ -39,10 +41,12 @@ class AIChatWidget(QWidget):
         self.input_field.setStyleSheet(
             "QLineEdit { background-color: #1A1A1A; color: #FFFFFF; border: 1px solid #333333; border-radius: 20px; padding: 10px 15px; font-size: 14px; }"
         )
-        
+
         btn_send = QPushButton("Send")
-        btn_send.setStyleSheet("padding: 10px 20px; background-color: #2196F3; color: white; border-radius: 20px; font-weight: bold;")
-        
+        btn_send.setStyleSheet(
+            "padding: 10px 20px; background-color: #2196F3; color: white; border-radius: 20px; font-weight: bold;"
+        )
+
         input_layout.addWidget(self.input_field)
         input_layout.addWidget(btn_send)
         layout.addLayout(input_layout)
