@@ -73,5 +73,3 @@ Every phase undergoes:
 - [x] **Phase 8: Final Polish, Scheduling, & Packaging**
 - [x] **Phase 9: Premium UI Overhaul (Multi-view, Charts, AI Chat)**
 
----
-*Developed as a premium, industry-standard Windows utility.*
