@@ -1,0 +1,14 @@
+2026-08-04 12:16:03,173 - INFO - Starting clean for User Temp
+2026-08-04 12:16:03,179 - INFO - Finished clean for User Temp: Freed 475929 bytes
+2026-08-04 12:16:03,180 - INFO - Starting clean for Windows Temp
+2026-08-04 12:16:03,180 - INFO - Finished clean for Windows Temp: Freed 0 bytes
+2026-08-04 12:16:03,180 - INFO - Starting clean for Recycle Bin
+2026-08-04 12:16:03,184 - INFO - Finished clean for Recycle Bin: Freed 0 bytes
+2026-08-04 12:16:03,185 - INFO - Starting clean for Thumbnail Cache
+2026-08-04 12:16:03,185 - INFO - Finished clean for Thumbnail Cache: Freed 0 bytes
+2026-08-04 12:16:03,185 - INFO - Starting clean for Browser Caches (Chrome, Edge, Brave, Firefox, Waterfox)
+2026-08-04 12:16:07,764 - INFO - Finished clean for Browser Caches (Chrome, Edge, Brave, Firefox, Waterfox): Freed 1055689685 bytes
+2026-08-04 12:16:07,764 - INFO - Starting clean for Delivery Optimization Cache
+2026-08-04 12:16:07,765 - INFO - Finished clean for Delivery Optimization Cache: Freed 0 bytes
+2026-08-04 12:16:07,765 - INFO - Starting clean for DirectX Shader Cache
+2026-08-04 12:16:07,769 - INFO - Finished clean for DirectX Shader Cache: Freed 73728 bytes
