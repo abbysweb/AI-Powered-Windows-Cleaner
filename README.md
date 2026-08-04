@@ -18,7 +18,7 @@ This project uses an **Industry-Standard Hybrid Architecture**:
 - **AI Advisor Client (Phase 5):** Natural language justifications for why files are marked for deletion, powered by a local Podman AI container.
 - **Deep File Scanner (Phase 6):** Advanced hashlib-based duplicate file scanning and customizable large file detection.
 - **Personalization Engine (Phase 7):** SQLite-based history logs, custom user preferences, and dynamic ignore lists.
-- **Automated Maintenance (Upcoming - Phase 8):** Background scheduling using Windows Task Scheduler integration.
+- **Automated Maintenance (Phase 8):** Background scheduling using Windows Task Scheduler integration and native PyInstaller packaging.
 
 ## Installation & Setup
 
@@ -70,7 +70,7 @@ Every phase undergoes:
 - [x] **Phase 5: Advanced AI Layer (Ollama + Llama)**
 - [x] **Phase 6: Deep File Scanning (Large Files & Duplicates)**
 - [x] **Phase 7: Personalization & Learning Engine (SQLite, Ignore Lists)**
-- [ ] **Phase 8: Final Polish, Scheduling, & Packaging**
+- [x] **Phase 8: Final Polish, Scheduling, & Packaging**
 
 ---
 *Developed as a premium, industry-standard Windows utility.*
