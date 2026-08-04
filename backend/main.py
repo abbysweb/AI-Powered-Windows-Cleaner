@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 # Initialize the Ollama client targeting the internal docker network host
-client = ollama.Client(host='http://ollama:11434')
+client = ollama.Client(host='http://ollama:11434', timeout=300)
 
 app = FastAPI(title="AI Windows Health Copilot - Backend API")
 

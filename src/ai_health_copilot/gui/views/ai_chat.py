@@ -1,3 +1,5 @@
+import os
+
 import psutil
 import requests
 from PySide6.QtCore import Qt, QThread, Signal
@@ -10,6 +12,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+BACKEND_URL = "http://localhost:8000"
+REQUEST_TIMEOUT = int(os.environ.get("AI_BACKEND_TIMEOUT", "300"))
 
 
 def collect_system_context() -> str:
@@ -58,13 +63,24 @@ class ChatThread(QThread):
             enriched_prompt = f"{context}User question: {self.prompt}"
 
             res = requests.post(
-                "http://localhost:8000/api/advisor",
+                f"{BACKEND_URL}/api/advisor",
                 json={"prompt": enriched_prompt},
-                timeout=60,
+                timeout=REQUEST_TIMEOUT,
             )
             res.raise_for_status()
             data = res.json()
             self.response_received.emit(data.get("recommendation", "No response."))
+        except requests.exceptions.ConnectionError:
+            self.error_received.emit(
+                f"Could not connect to the AI backend at {BACKEND_URL}. "
+                "Is the backend running? (podman-compose up -d --build)"
+            )
+        except requests.exceptions.Timeout:
+            self.error_received.emit(
+                f"The AI backend did not respond within {REQUEST_TIMEOUT} seconds. "
+                "The model may still be loading (cold start) on slow hardware. "
+                "Please wait a moment and try again."
+            )
         except requests.exceptions.RequestException as e:
             self.error_received.emit(f"Backend error: {e!s}")
 
