@@ -21,7 +21,7 @@ class ScannerResultsWidget(QWidget):
         layout.setSpacing(20)
 
         header = QLabel("Deep Scan Results")
-        header.setStyleSheet("font-size: 28px; font-weight: bold; color: #FFFFFF;")
+        header.setStyleSheet("font-size: 28px; font-weight: bold; color: #1A1A1A;")
         layout.addWidget(header)
 
         # Tree Widget for files
@@ -30,12 +30,12 @@ class ScannerResultsWidget(QWidget):
             ["File Name", "Location", "Category", "Size", "Risk Score"]
         )
         self.tree.setStyleSheet(
-            "QTreeWidget { background-color: rgba(40, 40, 40, 0.5); color: #E0E0E0; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; outline: 0; }"
-            "QTreeWidget::item:hover { background-color: rgba(255, 255, 255, 0.05); }"
-            "QTreeWidget::item:selected { background-color: rgba(33, 150, 243, 0.3); border-radius: 4px; }"
-            "QHeaderView::section { background-color: transparent; color: #BDBDBD; padding: 5px; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }"
+            "QTreeWidget { background-color: rgba(255, 255, 255, 0.6); color: #333333; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; outline: 0; }"
+            "QTreeWidget::item:hover { background-color: rgba(0, 0, 0, 0.05); }"
+            "QTreeWidget::item:selected { background-color: rgba(33, 150, 243, 0.2); border-radius: 4px; color: #1A1A1A; font-weight: bold; }"
+            "QHeaderView::section { background-color: transparent; color: #555555; font-weight: bold; padding: 5px; border: none; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }"
             "QScrollBar:vertical { background: transparent; width: 10px; }"
-            "QScrollBar::handle:vertical { background: rgba(255, 255, 255, 0.2); border-radius: 5px; min-height: 20px; }"
+            "QScrollBar::handle:vertical { background: rgba(0, 0, 0, 0.2); border-radius: 5px; min-height: 20px; }"
         )
 
         # Add dummy data

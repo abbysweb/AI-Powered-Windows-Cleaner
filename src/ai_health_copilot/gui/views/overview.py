@@ -22,7 +22,7 @@ class OverviewWidget(QWidget):
 
         # Header
         header = QLabel("Dashboard Overview")
-        header.setStyleSheet("font-size: 28px; font-weight: bold; color: #FFFFFF;")
+        header.setStyleSheet("font-size: 28px; font-weight: bold; color: #1A1A1A;")
         main_layout.addWidget(header)
 
         grid = QGridLayout()
@@ -30,7 +30,7 @@ class OverviewWidget(QWidget):
 
         # Storage Pie Chart
         storage_card = self.create_card("System Storage")
-        storage_layout = QVBoxLayout(storage_card)
+        storage_layout = storage_card.layout()
 
         self.storage_plot = pg.PlotWidget()
         self.storage_plot.setBackground("transparent")
@@ -49,7 +49,7 @@ class OverviewWidget(QWidget):
 
         # Health Score Card
         health_card = self.create_card("System Health")
-        health_layout = QVBoxLayout(health_card)
+        health_layout = health_card.layout()
         score_label = QLabel("98 / 100")
         score_label.setStyleSheet("font-size: 48px; color: #4CAF50; font-weight: bold;")
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -58,7 +58,7 @@ class OverviewWidget(QWidget):
 
         # Quick Actions Card
         actions_card = self.create_card("Quick Actions")
-        actions_layout = QVBoxLayout(actions_card)
+        actions_layout = actions_card.layout()
         btn_scan = QPushButton("Start Deep Scan")
         btn_clean = QPushButton("Quick Clean")
         btn_scan.setStyleSheet(
@@ -79,9 +79,9 @@ class OverviewWidget(QWidget):
         card = QFrame()
         card.setStyleSheet(
             "QFrame { "
-            "background-color: rgba(40, 40, 40, 0.5); "
+            "background-color: rgba(255, 255, 255, 0.7); "
             "border-radius: 12px; "
-            "border: 1px solid rgba(255, 255, 255, 0.1); "
+            "border: 1px solid rgba(0, 0, 0, 0.1); "
             "}"
         )
         
@@ -90,14 +90,14 @@ class OverviewWidget(QWidget):
         from PySide6.QtWidgets import QGraphicsDropShadowEffect
         shadow = QGraphicsDropShadowEffect(card)
         shadow.setBlurRadius(15)
-        shadow.setColor(QColor(0, 0, 0, 80))
+        shadow.setColor(QColor(0, 0, 0, 30))
         shadow.setOffset(0, 4)
         card.setGraphicsEffect(shadow)
         
         layout = QVBoxLayout(card)
         title_label = QLabel(title)
         title_label.setStyleSheet(
-            "font-size: 16px; font-weight: bold; color: #9E9E9E; border: none; margin-bottom: 10px;"
+            "font-size: 16px; font-weight: bold; color: #555555; border: none; margin-bottom: 10px; background: transparent;"
         )
         layout.addWidget(title_label)
         return card

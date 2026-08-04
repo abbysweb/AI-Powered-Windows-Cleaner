@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
             try:
                 # Apply Mica backdrop to the window handle
                 hwnd = int(self.winId())
-                ApplyMica(hwnd, MicaTheme.DARK, MicaStyle.DEFAULT)
+                ApplyMica(hwnd, MicaTheme.LIGHT, MicaStyle.DEFAULT)
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning(f"Failed to apply Mica: {e}")
@@ -57,13 +57,13 @@ class MainWindow(QMainWindow):
         self.sidebar = QFrame()
         self.sidebar.setFixedWidth(250)
         self.sidebar.setStyleSheet(
-            "QFrame { background-color: rgba(30, 30, 30, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.1); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }"
+            "QFrame { background-color: rgba(255, 255, 255, 0.6); border-right: 1px solid rgba(0, 0, 0, 0.1); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }"
             "QPushButton { "
             "   text-align: left; padding: 12px 20px; font-size: 15px; margin: 4px 10px; border-radius: 6px; "
-            "   background-color: transparent; color: rgba(255, 255, 255, 0.7); border: none; "
+            "   background-color: transparent; color: #333333; border: none; "
             "}"
-            "QPushButton:hover { background-color: rgba(255, 255, 255, 0.1); color: #FFFFFF; }"
-            "QPushButton:checked { background-color: rgba(33, 150, 243, 0.2); color: #2196F3; font-weight: bold; border-left: 4px solid #2196F3; }"
+            "QPushButton:hover { background-color: rgba(0, 0, 0, 0.05); color: #000000; }"
+            "QPushButton:checked { background-color: rgba(33, 150, 243, 0.1); color: #2196F3; font-weight: bold; border-left: 4px solid #2196F3; }"
         )
         sidebar_layout = QVBoxLayout(self.sidebar)
         sidebar_layout.setContentsMargins(0, 20, 0, 20)
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         # App Title in Sidebar
         title_label = QLabel("Health Copilot")
         title_label.setStyleSheet(
-            "font-size: 20px; font-weight: bold; color: #FFFFFF; padding-left: 20px; padding-bottom: 20px; border: none;"
+            "font-size: 20px; font-weight: bold; color: #1A1A1A; padding-left: 20px; padding-bottom: 20px; border: none;"
         )
         sidebar_layout.addWidget(title_label)
 
