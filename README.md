@@ -150,6 +150,27 @@ python src/ai_health_copilot/main.py
 
 > **Tip:** The first AI response takes ~15-30s (model cold start). Subsequent responses are faster.
 
+### Step 5 — One-Click Run Bot (Recommended)
+
+The **Run Bot** starts everything for you: it checks the AI backend, boots the
+Podman containers if they aren't running (and waits until they're healthy), then
+launches the app — all in one step.
+
+```powershell
+run_bot.bat
+```
+
+or
+
+```powershell
+python run_bot.py
+```
+
+The backend is probed at `http://localhost:8000/health`. If the container is already
+running it is reused (no rebuild); otherwise `podman-compose up -d --build` runs
+automatically with a 120-second health wait. The app launches even if the backend
+cannot start — the AI Advisor will warn, but scanning and cleaning still work.
+
 ---
 
 ## 🩺 System Health & Quality Gates
@@ -198,6 +219,11 @@ OVERALL HEALTH SCORE : 100 / 100
 - [x] **Phase 12:** Glassmorphic Windows 11 UI (win32mica Mica backdrop)
 - [x] **Phase 13:** Light mode & blue accent redesign + QLayout bug fix
 - [x] **Phase 14:** Full AI backend + frontend integration (QThread chat, live metrics injection)
+
+**Upcoming:**
+- [ ] **Phase 15:** Streaming AI responses (token-by-token display) — [Implementation Plan `PHASE_15_PLAN.md`](PHASE_15_PLAN.md)
+- [ ] **Phase 16:** History & Rollback view (restore deleted files)
+- [ ] **Phase 17:** Settings view (AI model selector, scan targets, scheduler config)
 
 ---
 
