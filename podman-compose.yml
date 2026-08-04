@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  ai-backend:
+    build: 
+      context: ./backend
+      dockerfile: Containerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./database:/app/database
+      - ./cache:/app/cache
+    depends_on:
+      - ollama
+
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  ollama-data:
