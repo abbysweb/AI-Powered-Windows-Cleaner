@@ -17,7 +17,7 @@ def build_app():
 
     # We will build main.py or app.py (assuming app.py for GUI)
     # The actual executable is Windows, non-console
-    entry_point = "main.py"
+    entry_point = "src/ai_health_copilot/main.py"
     if not os.path.exists(entry_point):
         print(f"Error: {entry_point} not found!")
         return

@@ -12,9 +12,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.views.ai_chat import AIChatWidget
-from gui.views.overview import OverviewWidget
-from gui.views.scanner_results import ScannerResultsWidget
+from ai_health_copilot.gui.views.ai_chat import AIChatWidget
+from ai_health_copilot.gui.views.overview import OverviewWidget
+from ai_health_copilot.gui.views.scanner_results import ScannerResultsWidget
 
 
 class MainWindow(QMainWindow):

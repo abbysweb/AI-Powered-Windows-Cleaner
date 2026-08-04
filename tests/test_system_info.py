@@ -1,4 +1,4 @@
-from core.scanner.system_info import (
+from ai_health_copilot.core.scanner.system_info import (
     get_cpu_info,
     get_disk_usage,
     get_os_info,

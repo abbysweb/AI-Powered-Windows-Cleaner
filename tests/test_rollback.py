@@ -2,7 +2,7 @@ import shutil
 
 import pytest
 
-from core.rollback.manager import QuarantineManager
+from ai_health_copilot.core.rollback.manager import QuarantineManager
 
 
 @pytest.fixture

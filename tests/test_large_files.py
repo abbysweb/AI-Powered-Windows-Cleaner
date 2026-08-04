@@ -1,4 +1,4 @@
-from core.scanner.large_files import scan_large_files
+from ai_health_copilot.core.scanner.large_files import scan_large_files
 
 
 def test_scan_large_files(tmp_path):

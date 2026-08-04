@@ -1,11 +1,11 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from core.cleaner.downloads import DownloadsCleaner
-from core.rollback.manager import QuarantineManager
+from ai_health_copilot.core.cleaner.downloads import DownloadsCleaner
+from ai_health_copilot.core.rollback.manager import QuarantineManager
 
 
-@patch("core.cleaner.downloads.Path.home")
+@patch("ai_health_copilot.core.cleaner.downloads.Path.home")
 def test_downloads_scan(mock_home):
     mock_downloads = MagicMock()
     mock_home.return_value = mock_downloads
@@ -27,7 +27,7 @@ def test_downloads_scan(mock_home):
     assert cleaner.name == "Downloads"
 
 
-@patch("core.cleaner.downloads.Path.home")
+@patch("ai_health_copilot.core.cleaner.downloads.Path.home")
 def test_downloads_delete(mock_home):
     mock_downloads = MagicMock()
     mock_home.return_value = mock_downloads

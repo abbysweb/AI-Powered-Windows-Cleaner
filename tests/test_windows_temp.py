@@ -1,10 +1,10 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from core.cleaner.windows_temp import WindowsTempCleaner
+from ai_health_copilot.core.cleaner.windows_temp import WindowsTempCleaner
 
 
-@patch("core.cleaner.windows_temp.WINDOWS_TEMP")
+@patch("ai_health_copilot.core.cleaner.windows_temp.WINDOWS_TEMP")
 def test_windows_temp_scan(mock_temp_dir):
     # Setup mock
     mock_temp_dir.exists.return_value = True
@@ -29,7 +29,7 @@ def test_windows_temp_scan(mock_temp_dir):
     assert cleaner.name == "Windows Temp"
 
 
-@patch("core.cleaner.windows_temp.WINDOWS_TEMP")
+@patch("ai_health_copilot.core.cleaner.windows_temp.WINDOWS_TEMP")
 def test_windows_temp_delete(mock_temp_dir):
     # Setup mock
     mock_temp_dir.exists.return_value = True

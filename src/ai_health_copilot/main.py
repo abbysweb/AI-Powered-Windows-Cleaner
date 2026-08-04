@@ -1,7 +1,9 @@
-import sys
 import logging
+import sys
+
 from PySide6.QtWidgets import QApplication
-from gui.main_window import MainWindow
+
+from ai_health_copilot.gui.main_window import MainWindow
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("AIHealthCopilot")

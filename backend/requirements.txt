@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-ollama
-faiss-cpu
-sentence-transformers
-pydantic

@@ -1,7 +1,7 @@
 import subprocess
 from unittest.mock import MagicMock, patch
 
-from core.scheduler.manager import TaskSchedulerManager
+from ai_health_copilot.core.scheduler.manager import TaskSchedulerManager
 
 
 def test_schedule_daily():

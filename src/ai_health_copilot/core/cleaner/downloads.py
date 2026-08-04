@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from core.rollback.manager import QuarantineManager
+from ai_health_copilot.core.rollback.manager import QuarantineManager
 
 from .base import BaseCleaner
 
@@ -37,7 +37,7 @@ class DownloadsCleaner(BaseCleaner):
         # Fetch ignored paths dynamically
         ignored_paths = set()
         try:
-            from database.manager import DatabaseManager
+            from ai_health_copilot.database.manager import DatabaseManager
 
             db = DatabaseManager()
             ignored_paths = set(db.get_ignored_folders())

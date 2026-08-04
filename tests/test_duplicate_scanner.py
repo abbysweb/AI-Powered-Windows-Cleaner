@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from core.duplicate.scanner import find_duplicates
+from ai_health_copilot.core.duplicate.scanner import find_duplicates
 
 
 def test_find_duplicates(tmp_path):

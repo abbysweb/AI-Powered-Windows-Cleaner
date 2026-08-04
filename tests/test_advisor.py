@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from ai.advisor import AIAdvisor
+from ai_health_copilot.ai.advisor import AIAdvisor
 
 
 def test_get_explanation_success():

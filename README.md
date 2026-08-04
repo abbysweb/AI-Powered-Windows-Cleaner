@@ -1,4 +1,4 @@
-# AI Windows Health Copilot
+# AI-Powered-Windows-Cleaner
 
 An intelligent Windows storage optimization and system maintenance assistant that safely analyzes disk usage, identifies unnecessary files, explains cleanup recommendations in natural language, and performs intelligent system maintenance.
 

@@ -3,7 +3,7 @@ import sys
 import pytest
 from PySide6.QtWidgets import QApplication
 
-from gui.dashboard import DashboardWidget
+from ai_health_copilot.gui.dashboard import DashboardWidget
 
 
 @pytest.fixture(scope="session")

@@ -1,14 +1,19 @@
+import logging
 import sqlite3
 from pathlib import Path
 from typing import Any
-import logging
 
 logger = logging.getLogger(__name__)
 
+
 class DatabaseManager:
-    def __init__(self, db_path: str = "database/storage.db", schema_path: str = "database/schema.sql"):
+    def __init__(
+        self,
+        db_path: str = "storage.db",
+        schema_path: str = None,
+    ):
         self.db_path = Path(db_path)
-        self.schema_path = Path(schema_path)
+        self.schema_path = Path(schema_path) if schema_path else Path(__file__).parent / "schema.sql"
         self._init_db()
 
     def _init_db(self):
@@ -17,10 +22,9 @@ class DatabaseManager:
         if not self.schema_path.exists():
             logger.error(f"Schema file not found at {self.schema_path}")
             return
-            
-        with sqlite3.connect(self.db_path) as conn:
-            with open(self.schema_path, "r") as f:
-                conn.executescript(f.read())
+
+        with sqlite3.connect(self.db_path) as conn, open(self.schema_path, "r") as f:
+            conn.executescript(f.read())
 
     def get_preference(self, key: str, default: str = "") -> str:
         with sqlite3.connect(self.db_path) as conn:
@@ -35,14 +39,16 @@ class DatabaseManager:
             cur.execute(
                 "INSERT INTO Preferences (key, value) VALUES (?, ?) "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-                (key, str(value))
+                (key, str(value)),
             )
             conn.commit()
 
     def add_ignored_folder(self, path: str):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
-            cur.execute("INSERT OR IGNORE INTO IgnoredFolders (path) VALUES (?)", (path,))
+            cur.execute(
+                "INSERT OR IGNORE INTO IgnoredFolders (path) VALUES (?)", (path,)
+            )
             conn.commit()
 
     def remove_ignored_folder(self, path: str):
@@ -62,7 +68,7 @@ class DatabaseManager:
             cur = conn.cursor()
             cur.execute(
                 "INSERT INTO History (action_type, target, size_bytes) VALUES (?, ?, ?)",
-                (action_type, target, size_bytes)
+                (action_type, target, size_bytes),
             )
             conn.commit()
 
