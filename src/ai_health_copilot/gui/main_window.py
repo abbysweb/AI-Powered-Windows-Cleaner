@@ -119,6 +119,10 @@ class MainWindow(QMainWindow):
         self.btn_ai_chat.clicked.connect(lambda: self.switch_view(2))
         self.btn_history.clicked.connect(lambda: self.switch_view(3))
         self.btn_settings.clicked.connect(lambda: self.switch_view(4))
+        
+        # Dashboard Action Connections
+        self.view_overview.btn_scan.clicked.connect(self.btn_scanner.click)
+        self.view_overview.btn_clean.clicked.connect(self.btn_scanner.click)
 
         # Initial state
         self.btn_overview.setChecked(True)

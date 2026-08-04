@@ -59,18 +59,18 @@ class OverviewWidget(QWidget):
         # Quick Actions Card
         actions_card = self.create_card("Quick Actions")
         actions_layout = actions_card.layout()
-        btn_scan = QPushButton("Start Deep Scan")
-        btn_clean = QPushButton("Quick Clean")
-        btn_scan.setStyleSheet(
+        self.btn_scan = QPushButton("Start Deep Scan")
+        self.btn_clean = QPushButton("Quick Clean")
+        self.btn_scan.setStyleSheet(
             "padding: 12px; font-size: 14px; background-color: #2196F3; color: white; border-radius: 6px; font-weight: bold;"
         )
-        btn_clean.setStyleSheet(
+        self.btn_clean.setStyleSheet(
             "padding: 12px; font-size: 14px; background-color: #FF9800; color: white; border-radius: 6px; font-weight: bold;"
         )
-        btn_scan.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_clean.setCursor(Qt.CursorShape.PointingHandCursor)
-        actions_layout.addWidget(btn_scan)
-        actions_layout.addWidget(btn_clean)
+        self.btn_scan.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_clean.setCursor(Qt.CursorShape.PointingHandCursor)
+        actions_layout.addWidget(self.btn_scan)
+        actions_layout.addWidget(self.btn_clean)
         grid.addWidget(actions_card, 1, 1)
 
         main_layout.addLayout(grid)
