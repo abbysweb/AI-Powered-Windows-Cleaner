@@ -1,5 +1,4 @@
 import re
-import os
 from pathlib import Path
 
 BASE_PY = Path("src/ai_health_copilot/core/cleaner/base.py")

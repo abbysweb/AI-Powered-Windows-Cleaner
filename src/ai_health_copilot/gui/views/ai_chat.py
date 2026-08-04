@@ -1,3 +1,5 @@
+import requests
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -7,6 +9,28 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+
+class ChatThread(QThread):
+    response_received = Signal(str)
+    error_received = Signal(str)
+
+    def __init__(self, prompt: str, parent=None):
+        super().__init__(parent)
+        self.prompt = prompt
+
+    def run(self):
+        try:
+            res = requests.post(
+                "http://localhost:8000/api/advisor",
+                json={"prompt": self.prompt},
+                timeout=30
+            )
+            res.raise_for_status()
+            data = res.json()
+            self.response_received.emit(data.get("recommendation", "No response."))
+        except requests.exceptions.RequestException as e:
+            self.error_received.emit(f"Backend error: {e!s}")
 
 
 class AIChatWidget(QWidget):
@@ -44,12 +68,54 @@ class AIChatWidget(QWidget):
             "QLineEdit { background-color: rgba(255, 255, 255, 0.7); color: #1A1A1A; border: 1px solid rgba(0, 0, 0, 0.1); border-bottom: 2px solid #2196F3; border-radius: 8px; padding: 10px 15px; font-size: 14px; }"
             "QLineEdit:focus { background-color: rgba(255, 255, 255, 0.9); }"
         )
+        self.input_field.returnPressed.connect(self.send_message)
 
-        btn_send = QPushButton("Send")
-        btn_send.setStyleSheet(
+        self.btn_send = QPushButton("Send")
+        self.btn_send.setStyleSheet(
             "padding: 10px 20px; background-color: #2196F3; color: white; border-radius: 20px; font-weight: bold;"
         )
+        self.btn_send.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_send.clicked.connect(self.send_message)
 
         input_layout.addWidget(self.input_field)
-        input_layout.addWidget(btn_send)
+        input_layout.addWidget(self.btn_send)
         layout.addLayout(input_layout)
+
+    def send_message(self):
+        text = self.input_field.text().strip()
+        if not text:
+            return
+
+        self.input_field.clear()
+        self.input_field.setDisabled(True)
+        self.btn_send.setDisabled(True)
+
+        self.chat_area.append(f"<br><b>You:</b> {text}")
+        self.chat_area.append("<i>AI is thinking...</i>")
+
+        self.thread = ChatThread(text)
+        self.thread.response_received.connect(self.handle_response)
+        self.thread.error_received.connect(self.handle_error)
+        self.thread.start()
+
+    def handle_response(self, text: str):
+        self._replace_thinking_text()
+        self.chat_area.append(f"<b>AI Advisor:</b> {text}")
+        self._enable_input()
+
+    def handle_error(self, error: str):
+        self._replace_thinking_text()
+        self.chat_area.append(f"<b style='color: red;'>Error:</b> {error}")
+        self._enable_input()
+
+    def _replace_thinking_text(self):
+        # Remove the "AI is thinking..." line
+        html = self.chat_area.toHtml()
+        html = html.replace("<i>AI is thinking...</i>", "")
+        self.chat_area.setHtml(html)
+        self.chat_area.moveCursor(self.chat_area.textCursor().MoveOperation.End)
+
+    def _enable_input(self):
+        self.input_field.setDisabled(False)
+        self.btn_send.setDisabled(False)
+        self.input_field.setFocus()

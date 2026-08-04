@@ -1,5 +1,9 @@
-from fastapi import FastAPI
+import ollama
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+# Initialize the Ollama client targeting the internal docker network host
+client = ollama.Client(host='http://ollama:11434')
 
 app = FastAPI(title="AI Windows Health Copilot - Backend API")
 
@@ -16,5 +20,24 @@ def health_check():
 
 @app.post("/api/advisor")
 def advisor(request: PromptRequest):
-    # This is a stub for the Ollama integration
-    return {"recommendation": f"Received prompt: {request.prompt}", "risk_score": 0}
+    try:
+        # Call the local Ollama instance
+        response = client.chat(
+            model='llama3.2:1b',
+            messages=[
+                {
+                    'role': 'system',
+                    'content': 'You are the AI Windows Health Copilot, an elite Windows maintenance and storage optimization assistant. Be concise, highly professional, and provide safe actionable advice.'
+                },
+                {
+                    'role': 'user',
+                    'content': request.prompt
+                }
+            ]
+        )
+        return {
+            "recommendation": response['message']['content'],
+            "risk_score": 0
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

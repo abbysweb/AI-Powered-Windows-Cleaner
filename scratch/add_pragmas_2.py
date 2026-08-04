@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 sch = Path("src/ai_health_copilot/core/scheduler/manager.py")
 content = sch.read_text(encoding="utf-8")

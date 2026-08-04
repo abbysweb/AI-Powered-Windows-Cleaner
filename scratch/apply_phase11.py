@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 # 1. Duplicate Scanner MD5 -> SHA256
