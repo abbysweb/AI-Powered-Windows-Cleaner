@@ -1,8 +1,0 @@
-2026-08-04 12:10:12,009 - INFO - Starting clean for User Temp
-2026-08-04 12:10:12,569 - INFO - Finished clean for User Temp: Freed 2931918553 bytes
-2026-08-04 12:10:12,569 - INFO - Starting clean for Windows Temp
-2026-08-04 12:10:12,569 - INFO - Finished clean for Windows Temp: Freed 0 bytes
-2026-08-04 12:10:12,570 - INFO - Starting clean for Recycle Bin
-2026-08-04 12:10:12,949 - INFO - Finished clean for Recycle Bin: Freed 17252491419 bytes
-2026-08-04 12:10:12,950 - INFO - Starting clean for Thumbnail Cache
-2026-08-04 12:10:12,958 - INFO - Finished clean for Thumbnail Cache: Freed 10544248 bytes
