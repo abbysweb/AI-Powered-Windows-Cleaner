@@ -168,7 +168,8 @@ class OverviewWidget(QWidget):
         # Disk bar chart
         disk_card = self._make_card("💾  Disk Usage by Drive")
         disk_layout = disk_card.layout()
-        assert disk_layout is not None
+        if disk_layout is None:
+            raise RuntimeError("Failed to initialize disk card layout")
 
         self.disk_plot = pg.PlotWidget()
         self.disk_plot.setBackground("transparent")
@@ -182,7 +183,8 @@ class OverviewWidget(QWidget):
         # Quick Actions card
         actions_card = self._make_card("⚡  Quick Actions")
         actions_raw = actions_card.layout()
-        assert actions_raw is not None
+        if actions_raw is None:
+            raise RuntimeError("Failed to initialize actions card layout")
         from PySide6.QtWidgets import QVBoxLayout as _QVBox
         actions_vl = _QVBox() if not isinstance(actions_raw, QVBoxLayout) else actions_raw
 
