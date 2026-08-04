@@ -206,6 +206,48 @@ OVERALL HEALTH SCORE : 100 / 100
 
 ---
 
+## 🌟 Future Roadmap (Phases 15+)
+
+### Phase 15: Enhanced AI Capabilities
+- [ ] **Streaming AI Responses** — Token-by-token display for better UX
+- [ ] **Multi-modal Reasoning** — Support for image analysis of error dialogs
+- [ ] **Conversational Memory** — AI remembers previous interactions
+
+### Phase 16: History & Recovery System
+- [ ] **Visual History Timeline** — Interactive timeline of all cleanup actions
+- [ ] **One-Click Rollback** — Restore entire sessions with single click
+- [ ] **Snapshot System** — Create restore points before major operations
+
+### Phase 17: Comprehensive Settings
+- [ ] **AI Model Selector** — Switch between llama3.2, llama3.1, code-llama
+- [ ] **Scan Target Configuration** — Custom directories, exclusions, depth
+- [ ] **Scheduler Engine** — Recurring auto-clean, peak-hours aware
+
+### Phase 18: Advanced Cleanup Modules
+- [ ] **Duplicate File Finder** — Content-aware duplicate detection
+- [ ] **Large File Auditor** — Identify oversized files wasting space
+- [ ] **Browser Cache Manager** — Chrome/Firefox/Edge cache cleanup
+- [ ] **Registry Cleaner** — Safe registry optimization
+
+### Phase 19: Performance Optimization
+- [ ] **Startup Optimizer** — Manage Windows startup programs
+- [ ] **Memory Leak Detector** — Real-time RAM monitoring with alerts
+- [ ] **Disk Fragment Analysis** — SSD/HDD optimization suggestions
+
+### Phase 20: Enterprise Features
+- [ ] **Multi-device Sync** — Sync preferences across Windows machines
+- [ ] **Usage Analytics Dashboard** — Resource consumption insights
+- [ ] **Admin Mode** — Elevated operations with audit logging
+- [ ] **Portable Version** — USB drive-compatible deployment
+
+### Research & Experiments
+- [ ] **On-device Embedding Search** — Semantic file matching
+- [ ] **Predictive Maintenance** — AI forecasts storage needs
+- [ ] **Custom AI Plugins** — User-defined assistant tools
+- [ ] **Accessibility Mode** — High-contrast, screen-reader optimized
+
+---
+
 ## 👨‍💻 Author
 
 **Abdullah Al Mamun**  
