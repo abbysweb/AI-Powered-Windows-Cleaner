@@ -63,14 +63,14 @@ See `AGENTS.md` for the strict contributor guidelines.
 
 ## Roadmap
 
-- [x] **Phase 1:** Project Initialization & Hybrid Architecture
-- [x] **Phase 2:** Core Scanning Engine
-- [x] **Phase 3:** Premium GUI Skeleton & Dashboard
-- [x] **Phase 4:** Safe Cleaning Engine & Rollback
-- [ ] **Phase 5:** Advanced AI Layer (Ollama + Llama)
-- [ ] **Phase 6:** Background Scheduler
-- [ ] **Phase 7:** UI Finalization & Charting
-- [ ] **Phase 8:** Packaging & Distribution
+- [x] **Phase 1: Project Initialization & Architecture Design**
+- [x] **Phase 2: Core Scanning Engine**
+- [x] **Phase 3: Premium UI/UX Dashboard**
+- [x] **Phase 4: Safe Cleaning Engine & Rollback**
+- [x] **Phase 5: Advanced AI Layer (Ollama + Llama)**
+- [x] **Phase 6: Deep File Scanning (Large Files & Duplicates)**
+- [x] **Phase 7: Personalization & Learning Engine (SQLite, Ignore Lists)**
+- [ ] **Phase 8: Final Polish, Scheduling, & Packaging**
 
 ---
 *Developed as a premium, industry-standard Windows utility.*

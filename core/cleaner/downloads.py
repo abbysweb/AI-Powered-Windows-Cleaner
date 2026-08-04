@@ -34,9 +34,30 @@ class DownloadsCleaner(BaseCleaner):
         if not self.downloads_dir.exists():
             return {"file_count": 0, "size_bytes": 0, "risk_score": self._risk_score}
 
+        # Fetch ignored paths dynamically
+        ignored_paths = set()
+        try:
+            from database.manager import DatabaseManager
+
+            db = DatabaseManager()
+            ignored_paths = set(db.get_ignored_folders())
+        except Exception:
+            pass
+
         try:
             for path in self.downloads_dir.rglob("*"):
                 if path.is_file():
+
+                    # Check if file is inside an ignored folder
+                    is_ignored = False
+                    for ignored in ignored_paths:
+                        if path.is_relative_to(Path(ignored)):
+                            is_ignored = True
+                            break
+
+                    if is_ignored:
+                        continue
+
                     try:
                         self._size += path.stat().st_size
                         self._files.append(path)
