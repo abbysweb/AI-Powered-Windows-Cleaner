@@ -6,3 +6,6 @@ pythonpath = ["src"]
 
 [tool.ruff.lint]
 ignore = ["BLE001", "S110"]
+
+[tool.mypy]
+ignore_missing_imports = true

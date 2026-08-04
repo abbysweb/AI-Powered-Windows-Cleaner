@@ -1,7 +1,7 @@
+import re
 import subprocess
 import sys
-import re
-from pathlib import Path
+
 
 def run_command(cmd: list[str]) -> tuple[bool, str]:
     try:
@@ -27,8 +27,8 @@ def check_tests() -> tuple[bool, str, str]:
     summary = match.group(1) if match else "Unknown results"
     
     # Count passed/failed
-    passed = output.count(" PASSED ")
-    failed = output.count(" FAILED ")
+    output.count(" PASSED ")
+    output.count(" FAILED ")
     
     return success, summary, output
 

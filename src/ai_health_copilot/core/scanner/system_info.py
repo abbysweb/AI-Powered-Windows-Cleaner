@@ -9,9 +9,8 @@ def get_disk_usage() -> list[dict[str, Any]]:
     """Returns disk usage information for all physical drives."""
     drives = []
     for part in psutil.disk_partitions(all=False):
-        if os.name == "nt":
-            if "cdrom" in part.opts or part.fstype == "":
-                continue
+        if os.name == "nt" and ("cdrom" in part.opts or part.fstype == ""):
+            continue
         try:
             usage = psutil.disk_usage(part.mountpoint)
             drives.append(

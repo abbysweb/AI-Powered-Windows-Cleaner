@@ -10,7 +10,7 @@ class DatabaseManager:
     def __init__(
         self,
         db_path: str = "storage.db",
-        schema_path: str = None,
+        schema_path: str | None = None,
     ):
         self.db_path = Path(db_path)
         self.schema_path = Path(schema_path) if schema_path else Path(__file__).parent / "schema.sql"

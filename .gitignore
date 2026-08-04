@@ -1,0 +1,28 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Project specific
+logs/
+storage.db
+dist/
+build/
+*.spec
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
