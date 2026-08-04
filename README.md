@@ -199,11 +199,6 @@ OVERALL HEALTH SCORE : 100 / 100
 - [x] **Phase 13:** Light mode & blue accent redesign + QLayout bug fix
 - [x] **Phase 14:** Full AI backend + frontend integration (QThread chat, live metrics injection)
 
-**Upcoming:**
-- [ ] **Phase 15:** Streaming AI responses (token-by-token display)
-- [ ] **Phase 16:** History & Rollback view (restore deleted files)
-- [ ] **Phase 17:** Settings view (AI model selector, scan targets, scheduler config)
-
 ---
 
 ## 🌟 Future Roadmap (Phases 15+)
@@ -256,6 +251,4 @@ TU Wien (Vienna, Austria) & Daffodil International University
 📧 mamun.swe.de@gmail.com | 🌐 [github.com/abbysweb](https://github.com/abbysweb)  
 🎓 ORCID: [0009-0006-7473-0024](https://orcid.org/0009-0006-7473-0024)
 
----
 
-*Built with ❤️ in Vienna — a production-quality, enterprise-grade Windows maintenance tool.*
