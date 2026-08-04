@@ -86,8 +86,8 @@ class OverviewWidget(QWidget):
         )
         
         # Add a subtle drop shadow for depth
-        from PySide6.QtWidgets import QGraphicsDropShadowEffect
         from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QGraphicsDropShadowEffect
         shadow = QGraphicsDropShadowEffect(card)
         shadow.setBlurRadius(15)
         shadow.setColor(QColor(0, 0, 0, 80))

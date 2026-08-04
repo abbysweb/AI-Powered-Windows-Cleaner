@@ -1,4 +1,5 @@
 import sys
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
@@ -17,9 +18,8 @@ from ai_health_copilot.gui.views.ai_chat import AIChatWidget
 from ai_health_copilot.gui.views.overview import OverviewWidget
 from ai_health_copilot.gui.views.scanner_results import ScannerResultsWidget
 
-
 try:
-    from win32mica import ApplyMica, MicaTheme, MicaStyle
+    from win32mica import ApplyMica, MicaStyle, MicaTheme
     MICA_AVAILABLE = True
 except ImportError:
     MICA_AVAILABLE = False
