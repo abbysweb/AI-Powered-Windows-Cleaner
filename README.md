@@ -10,6 +10,34 @@ This project uses an **Industry-Standard Hybrid Architecture**:
 - **Native Windows Host (GUI & Scanner):** PySide6 GUI and Python scanning engine running locally with Admin privileges to access the filesystem and manage Windows components.
 - **Containerized AI Backend (Podman):** A lightweight FastAPI container running the AI models (Ollama/Llama) and vector databases. This keeps the Windows host clean of heavy ML dependencies while exposing a local API for the GUI to interact with.
 
+### System Diagram
+
+```mermaid
+graph TD
+    subgraph "Native Windows Host"
+        A[PySide6 GUI Dashboard] -->|User Input| B(Scanner Engine)
+        A -->|Commands| C(Cleaner & Rollback Engine)
+        A -->|API Calls| D[FastAPI Client]
+        
+        B -->|Disk Analysis| E[(Windows Filesystem)]
+        C -->|Delete/Quarantine| E
+        
+        F[Windows Task Scheduler] -.->|Auto-clean| C
+        G[(SQLite Database)] <-.->|Preferences & History| A
+    end
+
+    subgraph "Podman Virtual Machine (WSL2)"
+        H[FastAPI Backend Container]
+        I[Ollama AI Engine]
+        J[(Llama Models)]
+        
+        H -->|Queries| I
+        I -->|Inference| J
+    end
+    
+    D ==>|HTTP/REST| H
+```
+
 ## Features
 
 - **System Scanner (Phase 1 & 2):** Scans disk usage, RAM, CPU, OS details, and categorizes storage waste (Windows Temp, Downloads, Recycle Bin).
@@ -47,7 +75,7 @@ podman-compose up -d --build
 Run the desktop application:
 
 ```powershell
-python app.py
+python src/ai_health_copilot/main.py
 ```
 
 ## Development Lifecycle
