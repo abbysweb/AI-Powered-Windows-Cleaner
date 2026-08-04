@@ -3,42 +3,47 @@ import os
 from pathlib import Path
 from typing import Any
 
+from core.rollback.manager import QuarantineManager
+
 from .base import BaseCleaner
 
 logger = logging.getLogger(__name__)
 
-WINDOWS_TEMP = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Temp"
 
-
-class WindowsTempCleaner(BaseCleaner):
-    def __init__(self):
+class DownloadsCleaner(BaseCleaner):
+    def __init__(self, quarantine_manager: QuarantineManager | None = None):
         self._files: list[Path] = []
         self._size: int = 0
-        self._risk_score: int = 20
+        self._risk_score: int = 80  # High risk - user files
+        self.qm = quarantine_manager or QuarantineManager()
+
+        # Determine downloads path
+        if os.name == "nt":
+            self.downloads_dir = Path.home() / "Downloads"
+        else:
+            self.downloads_dir = Path.home() / "Downloads"
 
     @property
     def name(self) -> str:
-        return "Windows Temp"
+        return "Downloads"
 
     def scan(self) -> dict[str, Any]:
         self._files = []
         self._size = 0
 
-        if not WINDOWS_TEMP.exists():
-            return {"file_count": 0, "size_bytes": 0}
+        if not self.downloads_dir.exists():
+            return {"file_count": 0, "size_bytes": 0, "risk_score": self._risk_score}
 
         try:
-            for path in WINDOWS_TEMP.rglob("*"):
+            for path in self.downloads_dir.rglob("*"):
                 if path.is_file():
                     try:
                         self._size += path.stat().st_size
                         self._files.append(path)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Could not stat {path}: {e}")
         except PermissionError:
-            return {
-                "error": "Administrator privileges required to scan full Windows Temp"
-            }
+            return {"error": "Permission denied accessing Downloads"}
 
         return {
             "file_count": len(self._files),
@@ -50,14 +55,10 @@ class WindowsTempCleaner(BaseCleaner):
         return self._size
 
     def delete(self) -> bool:
-        if not hasattr(self, "qm"):
-            from core.rollback.manager import QuarantineManager
-
-            self.qm = QuarantineManager()
-
         success = True
         for path in self._files:
             try:
+                # Quarantine the file first
                 self.qm.backup_file(path)
                 path.unlink(missing_ok=True)
             except Exception as e:
@@ -66,12 +67,9 @@ class WindowsTempCleaner(BaseCleaner):
         return success
 
     def rollback(self) -> bool:
-        # Placeholder for phase 4 rollback feature
+        # Full rollback relies on QuarantineManager tracking which files it moved.
+        # For this prototype, we would need to store mappings.
         return False
 
     def explain(self) -> str:
-        return (
-            "Windows Temp contains temporary files created by the operating system "
-            "and application installers. These files are typically safe to delete, "
-            "but files currently in use will be skipped."
-        )
+        return "Clears the current user's Downloads folder. High risk as it contains downloaded user files."
