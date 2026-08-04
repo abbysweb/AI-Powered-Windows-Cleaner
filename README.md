@@ -52,6 +52,107 @@ graph TD
 4. **The Scanner** runs in a `QThread` worker, populating the tree view with real junk files. You can check boxes and click "Delete Selected" to permanently remove them.
 5. **Rollback** is supported — any deletion is backed up to a quarantine folder before removal.
 
+### Detailed Full-System Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as 🧑 User
+    participant RB as 🚀 Run Bot
+    participant G as 🖥 PySide6 GUI (MainWindow)
+    participant OV as 📊 Dashboard (OverviewWidget)
+    participant SV as 🔍 Scanner View
+    participant SW as ⚙ ScanWorker (QThread)
+    participant CL as 🗑 Cleaner Engine
+    participant QB as 📦 Quarantine Manager
+    participant DB as 🗄 SQLite Database
+    participant FS as 📁 Windows Filesystem
+    participant AV as 💬 AI Chat (AIChatWidget)
+    participant CT as 🔄 ChatThread (QThread)
+    participant HW as 🛰 System Metrics (psutil)
+    participant BK as ⚙ FastAPI Backend
+    participant OL as 🤖 Ollama (llama3.2:1b)
+
+    rect rgb(240, 246, 255)
+        Note over RB,G: 1. One-Click Startup (Run Bot)
+        RB->>BK: GET /health
+        alt backend healthy
+            BK-->>RB: 200 healthy
+        else not running
+            RB->>RB: podman-compose up -d --build
+            loop poll every 2s (max 120s)
+                RB->>BK: GET /health
+                BK-->>RB: 200 once ready
+            end
+        end
+        RB->>G: launch app (python main.py)
+        G->>OV: create OverviewWidget
+        G->>SV: create ScannerResultsWidget
+        G->>AV: create AIChatWidget
+    end
+
+    rect rgb(235, 245, 235)
+        Note over G,DB: 2. Live Dashboard Metrics
+        loop every 3 s
+            OV->>HW: cpu_percent / virtual_memory / disk_usage
+            HW-->>OV: live CPU, RAM, disk metrics
+            OV->>OV: update tiles, health score & disk chart
+        end
+    end
+
+    rect rgb(255, 248, 235)
+        Note over U,SV: 3. Deep Scan
+        U->>SV: Start Deep Scan
+        SV->>SW: worker.start()
+        SW->>CL: scan() [WindowsTemp, Downloads]
+        CL->>FS: rglob temp / downloads folders
+        FS-->>CL: matching files + sizes
+        CL-->>SW: file list with category & risk score
+        SW->>SW: also scan %TEMP%, sort by size
+        SW-->>SV: scan_complete(results)
+        SV->>SV: populate sortable tree + progress bar
+        SV-->>U: show junk files & total size
+    end
+
+    rect rgb(255, 235, 235)
+        Note over U,DB: 4. Quarantine-First Deletion
+        U->>SV: check files → Delete Selected
+        SV->>CL: delete() for each selected path
+        CL->>QB: backup_file(path)
+        QB->>FS: copy2 → cache/quarantine
+        CL->>FS: unlink(path)
+        CL->>DB: INSERT INTO History (DELETE, path, size)
+        CL-->>SV: finished(deleted, failed)
+        SV->>SV: auto re-scan to refresh results
+        SV-->>U: cleanup summary dialog
+    end
+
+    rect rgb(245, 240, 255)
+        Note over U,DB: 5. AI Health Advisor (streaming-ready)
+        U->>AV: ask a question
+        AV->>CT: start ChatThread (QThread)
+        CT->>HW: collect_system_context()
+        HW-->>CT: live CPU / RAM / disk metrics
+        CT->>BK: POST /api/advisor (enriched prompt)
+        BK->>OL: client.chat(llama3.2:1b)
+        OL-->>BK: AI recommendation
+        BK-->>CT: JSON recommendation payload
+        CT-->>AV: response_received(text)
+        AV->>AV: render in chat area
+        AV-->>U: AI data-driven advice
+    end
+
+    rect rgb(235, 245, 250)
+        Note over U,DB: 6. History & Rollback
+        U->>SV: delete files (logged to History)
+        SV->>DB: write History records
+        U->>G: open History / Rollback view
+        G->>DB: get_history()
+        DB-->>G: all action records
+        G-->>U: table of deletions & restores
+    end
+```
+
 ---
 
 ## ✨ Features (Current — All Implemented)
