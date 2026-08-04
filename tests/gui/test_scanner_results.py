@@ -18,7 +18,17 @@ def test_scanner_results_creation(app, qtbot):
     results = ScannerResultsWidget()
     qtbot.addWidget(results)
 
-    # Assert layout and basic properties
+    # Widget and layout exist
     assert results.layout() is not None
     assert results.tree is not None
-    assert results.tree.topLevelItemCount() >= 2
+
+    # Tree starts empty — data is populated after the user clicks Start Scan
+    assert results.tree.topLevelItemCount() == 0
+
+    # Core controls are present
+    assert results.btn_scan is not None
+    assert results.btn_delete is not None
+    assert results.progress_bar is not None
+
+    # Delete button is disabled until a scan completes
+    assert not results.btn_delete.isEnabled()

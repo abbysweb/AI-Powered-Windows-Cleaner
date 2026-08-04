@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ai_health_copilot.gui.views.ai_chat import AIChatWidget
+from ai_health_copilot.gui.views.history import HistoryWidget
 from ai_health_copilot.gui.views.overview import OverviewWidget
 from ai_health_copilot.gui.views.scanner_results import ScannerResultsWidget
 
@@ -32,7 +33,7 @@ class MainWindow(QMainWindow):
         self.resize(1200, 800)
         
         # Enable translucent background for Mica
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         if MICA_AVAILABLE and sys.platform == "win32":
             try:
@@ -104,7 +105,7 @@ class MainWindow(QMainWindow):
         self.view_overview = OverviewWidget()
         self.view_scanner = ScannerResultsWidget()
         self.view_ai_chat = AIChatWidget()
-        self.view_history = QWidget()  # Placeholder for history
+        self.view_history = HistoryWidget()
         self.view_settings = QWidget()  # Placeholder for settings
 
         self.stacked_widget.addWidget(self.view_overview)
@@ -123,6 +124,9 @@ class MainWindow(QMainWindow):
         # Dashboard Action Connections
         self.view_overview.btn_scan.clicked.connect(self.btn_scanner.click)
         self.view_overview.btn_clean.clicked.connect(self.btn_scanner.click)
+
+        # Refresh history when user navigates to it
+        self.btn_history.clicked.connect(self.view_history.load_history)
 
         # Initial state
         self.btn_overview.setChecked(True)

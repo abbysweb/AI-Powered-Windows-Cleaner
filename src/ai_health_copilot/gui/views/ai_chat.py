@@ -135,10 +135,10 @@ class AIChatWidget(QWidget):
         self.chat_area.append(f"<br><b>You:</b> {text}")
         self.chat_area.append("<i>AI is thinking...</i>")
 
-        self.thread = ChatThread(text)
-        self.thread.response_received.connect(self.handle_response)
-        self.thread.error_received.connect(self.handle_error)
-        self.thread.start()
+        self._chat_thread = ChatThread(text)
+        self._chat_thread.response_received.connect(self.handle_response)
+        self._chat_thread.error_received.connect(self.handle_error)
+        self._chat_thread.start()
 
     def handle_response(self, text: str) -> None:
         self._replace_thinking_text()

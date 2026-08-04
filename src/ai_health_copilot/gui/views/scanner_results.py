@@ -1,7 +1,10 @@
-import os
 import logging
+import os
+import sqlite3
 from pathlib import Path
 from typing import Any
+
+DB_PATH = "database/storage.db"
 
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
@@ -34,7 +37,7 @@ class ScanWorker(QThread):
     scan_complete = Signal(list)          # list[dict]
     error_occurred = Signal(str)
 
-    def run(self) -> None:  # noqa: PLR0912
+    def run(self) -> None:
         results: list[dict[str, Any]] = []
         cleaners = [
             WindowsTempCleaner(),
@@ -49,7 +52,7 @@ class ScanWorker(QThread):
             )
             try:
                 cleaner.scan()
-                for file_path in cleaner._files:  # noqa: SLF001
+                for file_path in cleaner._files:
                     try:
                         size_bytes = file_path.stat().st_size
                     except OSError:
@@ -61,7 +64,7 @@ class ScanWorker(QThread):
                             "full_path": str(file_path),
                             "category": cleaner.name,
                             "size_bytes": size_bytes,
-                            "risk_score": cleaner._risk_score,  # noqa: SLF001
+                            "risk_score": cleaner._risk_score,
                             "_cleaner": cleaner,
                         }
                     )
@@ -118,7 +121,23 @@ class DeleteWorker(QThread):
                 f"Deleting {Path(file_path_str).name}…",
             )
             try:
-                Path(file_path_str).unlink(missing_ok=True)
+                file_path = Path(file_path_str)
+                size_bytes = 0
+                try:
+                    size_bytes = file_path.stat().st_size
+                except OSError:
+                    pass
+                file_path.unlink(missing_ok=True)
+                # Log deletion to SQLite history
+                try:
+                    with sqlite3.connect(DB_PATH) as conn:
+                        conn.execute(
+                            "INSERT INTO History (action_type, target, size_bytes) VALUES (?, ?, ?)",
+                            ("DELETE", file_path_str, size_bytes),
+                        )
+                        conn.commit()
+                except Exception as db_exc:
+                    logger.warning("Failed to log deletion to DB: %s", db_exc)
                 deleted += 1
             except Exception as exc:
                 logger.warning("Failed to delete %s: %s", file_path_str, exc)

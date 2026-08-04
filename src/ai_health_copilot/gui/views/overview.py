@@ -31,6 +31,7 @@ class OverviewWidget(QWidget):
         # Storage Pie Chart
         storage_card = self.create_card("System Storage")
         storage_layout = storage_card.layout()
+        assert storage_layout is not None
 
         self.storage_plot = pg.PlotWidget()
         self.storage_plot.setBackground("transparent")
@@ -50,6 +51,7 @@ class OverviewWidget(QWidget):
         # Health Score Card
         health_card = self.create_card("System Health")
         health_layout = health_card.layout()
+        assert health_layout is not None
         score_label = QLabel("98 / 100")
         score_label.setStyleSheet("font-size: 48px; color: #4CAF50; font-weight: bold;")
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -59,6 +61,7 @@ class OverviewWidget(QWidget):
         # Quick Actions Card
         actions_card = self.create_card("Quick Actions")
         actions_layout = actions_card.layout()
+        assert actions_layout is not None
         self.btn_scan = QPushButton("Start Deep Scan")
         self.btn_clean = QPushButton("Quick Clean")
         self.btn_scan.setStyleSheet(
