@@ -73,3 +73,11 @@ Every phase undergoes:
 - [x] **Phase 8: Final Polish, Scheduling, & Packaging**
 - [x] **Phase 9: Premium UI Overhaul (Multi-view, Charts, AI Chat)**
 
+---
+## Author
+
+**Abdullah Al Mamun**  
+BSc, MSc - Software Engineering  
+TU Wien (Vienna, Austria) & Daffodil International University  
+mamun.swe.de@gmail.com | [https://github.com/abbysweb](https://github.com/abbysweb)  
+ORCID: [0009-0006-7473-0024](https://orcid.org/0009-0006-7473-0024)
