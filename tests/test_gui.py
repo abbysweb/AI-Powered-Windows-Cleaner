@@ -17,5 +17,5 @@ def app():
 def test_overview_creation(app):
     overview = OverviewWidget()
     assert overview is not None
-    assert overview.storage_plot is not None
+    assert overview.disk_plot is not None
     assert overview.layout() is not None

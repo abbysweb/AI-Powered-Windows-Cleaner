@@ -181,9 +181,10 @@ class OverviewWidget(QWidget):
 
         # Quick Actions card
         actions_card = self._make_card("⚡  Quick Actions")
-        actions_layout = actions_card.layout()
-        assert actions_layout is not None
-        actions_vl = actions_layout  # already QVBoxLayout from _make_card
+        actions_raw = actions_card.layout()
+        assert actions_raw is not None
+        from PySide6.QtWidgets import QVBoxLayout as _QVBox
+        actions_vl = _QVBox() if not isinstance(actions_raw, QVBoxLayout) else actions_raw
 
         self.btn_scan = QPushButton("\u25b6  Start Deep Scan")
         self.btn_clean = QPushButton("\U0001f9f9  Quick Clean")
