@@ -1,103 +1,127 @@
-# AI-Powered Windows Cleaner
+# AI-Powered Windows Health Copilot
+
+> **Enterprise-grade, AI-driven Windows storage optimization and system health assistant.**  
+> Powered by a local LLM (Llama 3.2 via Ollama) — 100% offline, 100% private.
 
 **Core Highlights:**
-- 🧠 **Ollama & Llama AI Integration:** Offline, private LLM inferences for safe cleaning recommendations.
-- ⚡ **Native Windows Speed:** PySide6 + Python standard libraries for maximum filesystem I/O performance.
-- 🎨 **Glassmorphic UI:** True Windows 11 Mica hardware-accelerated frosted glass aesthetic.
-- 🔒 **Enterprise Quality Gates:** Strict 100/100 scores in security (Bandit), typing (Mypy), and linting (Ruff).
-
-A next-generation, AI-driven storage optimization and system health assistant designed exclusively for Windows. It goes beyond simple file deletion by safely analyzing disk usage, identifying deep-system bloat, and performing intelligent, secure maintenance.
-
-Unlike traditional, rigid cleaners, this Copilot leverages advanced Large Language Models (LLMs) to **explain every cleanup recommendation in plain English**, accurately **estimate deletion risks**, and **adapt to your unique workflow preferences**. Experience enterprise-grade system care with unprecedented transparency.
+| | Feature | Description |
+|---|---|---|
+| 🧠 | **Local AI (Ollama + Llama 3.2)** | Offline LLM that analyses your real CPU/RAM/disk metrics and gives contextual advice |
+| ⚡ | **Real-Time File Scanner** | Multi-threaded scanner with progress bar that finds Windows Temp, User Temp & Download junk |
+| 🗑 | **Safe Deletion Engine** | Quarantine-first deletion with full rollback support and confirmation dialogs |
+| 🎨 | **Windows 11 Glassmorphic UI** | True Mica frosted-glass backdrop via `win32mica` + Windows DWM hardware acceleration |
+| 🐳 | **Containerised AI Backend** | FastAPI + Ollama isolated in Podman (WSL2) — zero ML dependencies on the host OS |
+| 🔒 | **Enterprise Quality Gates** | 100/100 system health score: Ruff, Mypy, Bandit, Radon, Pytest — every commit |
 
 ---
 
-## 🏗 Core Architecture
+## 🏗 Architecture
 
-This project uses an **Industry-Standard Hybrid Architecture**:
-- **Native Windows Host (GUI & Scanner):** PySide6 GUI and Python scanning engine running locally with Admin privileges to access the filesystem and manage Windows components natively at maximum speed.
-- **Containerized AI Backend (Podman):** A lightweight FastAPI container running the AI models (Ollama/Llama) and vector databases. This keeps the Windows host clean of heavy ML dependencies while exposing a local API for the GUI to interact with securely.
-
-### System Diagram
+This project uses a **Hybrid Architecture** — a native Windows GUI talks to a containerised AI backend over a local REST API.
 
 ```mermaid
 graph TD
-    subgraph "Native Windows Host"
-        A[PySide6 GUI Dashboard] -->|User Input| B(Scanner Engine)
-        A -->|Commands| C(Cleaner & Rollback Engine)
-        A -->|API Calls| D[FastAPI Client]
-        
-        B -->|Disk Analysis| E[(Windows Filesystem)]
-        C -->|Delete/Quarantine| E
-        
-        F[Windows Task Scheduler] -.->|Auto-clean| C
-        G[(SQLite Database)] <-.->|Preferences & History| A
+    subgraph "Native Windows Host (Python)"
+        A["🖥 PySide6 GUI Dashboard"] --> B("🔍 Scanner Engine\n(Windows Temp / User Temp / Downloads)")
+        A --> C("🗑 Cleaner & Rollback Engine\n(Quarantine-first deletion)")
+        A --> D["🌐 HTTP Client (requests)"]
+
+        B --> E[("📁 Windows Filesystem")]
+        C --> E
+
+        F["⏰ Windows Task Scheduler"] -.->|Auto-clean| C
+        G[("🗄 SQLite Database\n(History, Prefs, Ignore Lists)")] <-.-> A
     end
 
-    subgraph "Podman Virtual Machine (WSL2)"
-        H[FastAPI Backend Container]
-        I[Ollama AI Engine]
-        J[(Llama Models)]
-        
-        H -->|Queries| I
-        I -->|Inference| J
+    subgraph "Podman / WSL2 Container Sandbox"
+        H["⚙ FastAPI Backend\n(port 8000)"]
+        I["🤖 Ollama Engine\n(port 11434)"]
+        J[("📦 llama3.2:1b Model\n~1.3 GB")]
+
+        H --> I
+        I --> J
     end
-    
-    D ==>|HTTP/REST| H
+
+    D ===>|"POST /api/advisor\n(enriched with live metrics)"| H
 ```
 
-### How it works:
-1. **The Native Host** runs the UI (PySide6) and heavy filesystem operations natively on Windows to maximize performance and safely access critical system files.
-2. **The SQLite Database** acts as the local brain, persisting user preferences, history logs, and folder ignore lists.
-3. **The WSL2/Podman VM** acts as an isolated sandbox for the heavy AI models (Ollama). When the user asks for advice on a file, the FastAPI Client sends an HTTP request to the isolated Container. The Container processes the LLM inference and returns the text justification. This guarantees the user's host Windows machine remains completely free of messy Python ML dependencies and bloated model weights.
+### How it works end-to-end:
+1. **GUI (PySide6)** collects live CPU/RAM/disk stats using `psutil` and sends them alongside your question to the FastAPI backend.
+2. **FastAPI** (running inside a Podman container) receives the request and calls the local Ollama engine.
+3. **Ollama + Llama 3.2** processes the enriched prompt and returns a contextual, data-driven recommendation.
+4. **The Scanner** runs in a `QThread` worker, populating the tree view with real junk files. You can check boxes and click "Delete Selected" to permanently remove them.
+5. **Rollback** is supported — any deletion is backed up to a quarantine folder before removal.
 
 ---
 
-## 🛠️ Tools & Technologies Used
+## ✨ Features (Current — All Implemented)
 
-This system leverages a modern, diverse stack to achieve high performance, safety, and AI capabilities without bloating the host OS.
+### 🖥 Dashboard
+- Live storage bar chart (used vs. free space via `pyqtgraph`)
+- System health score widget
+- **"Start Deep Scan"** and **"Quick Clean"** buttons wired to the Scanner view
 
-### 1. Frontend & GUI
-- **PySide6 (Qt for Python):** Used to build the native, responsive, and hardware-accelerated Windows desktop interface. Chosen for its native OS integration and styling capabilities.
-- **win32mica:** Used to inject true Windows 11 Mica/Acrylic glassmorphism backdrops into the PySide6 application by hooking directly into the Windows Desktop Window Manager (DWM).
+### 🔍 Deep Scan Results
+- Real multi-threaded scanner (`QThread` worker) targeting:
+  - `C:\Windows\Temp` — Windows system temp files
+  - `%TEMP%` — User-level temp files
+  - `%USERPROFILE%\Downloads` — Downloaded installers & archives
+- Live progress bar and status text during scanning
+- Sortable table with: File Name, Location, Category, Size, Risk Level
+- Per-file checkbox selection + **"Select All"** button
+- Selection counter showing total files & total size chosen
+- **"Delete Selected"** with confirmation dialog → permanent deletion via background `DeleteWorker`
+- Auto re-scan after deletion to refresh results
 
-### 2. Core Engine & System Integration
-- **Python 3.12+:** The core runtime for both the GUI and the system scanner. Provides excellent standard libraries for OS interaction and cross-process communication.
-- **psutil:** Used for real-time monitoring of system resources (CPU, RAM, Disk usage) to provide accurate health metrics.
-- **schtasks (Windows Native):** Integrated via Python's `subprocess` to schedule automated background cleanups directly in the Windows Task Scheduler.
+### 🤖 AI Health Advisor (Chat)
+- Conversational UI powered by **local Llama 3.2:1b** (no cloud, no API key)
+- Every message is automatically enriched with **live system telemetry**:
+  - CPU usage % and core count
+  - RAM: used / total / percentage
+  - All disk partitions: used / total / percentage
+- Non-blocking async responses using `QThread` (UI stays responsive)
+- Send via button click or `Enter` key
+- Typing indicator ("AI is thinking...")
 
-### 3. AI & Containerization
-- **Podman / WSL2:** Used to containerize the AI backend. This isolates the heavy ML dependencies from the Windows host, keeping the installation footprint small and preventing dependency conflicts.
-- **FastAPI:** A high-performance Python web framework running inside the Podman container. It exposes a local REST API that the native Windows client queries for AI advice.
-- **Ollama / Llama Models:** The local LLM engine running inside the container. It analyzes file paths and metadata to provide natural language justifications for file deletion or retention, entirely offline for maximum privacy.
-
-### 4. Data Persistence & Quality Assurance
-- **SQLite3:** A lightweight, serverless database embedded in the host app. It stores user preferences, deletion history for rollbacks, and folder ignore lists.
-- **Pytest & pytest-qt:** The testing framework used to ensure robust functionality and UI correctness, maintaining >94% code coverage.
-- **Ruff, Mypy, Bandit, Radon:** A rigorous suite of static analysis tools ensuring perfect linting compliance, strict typing, zero security vulnerabilities, and low cyclomatic complexity.
+### 🛡 Security & Safety
+- Quarantine-first deletion: files backed up before removal
+- No shell injection (all filesystem ops use `pathlib`)
+- Admin-privilege detection and graceful degradation
+- No cloud dependency — model runs 100% locally
 
 ---
-## ✨ Key Features
 
-- **System Scanner:** Scans disk usage, RAM, CPU, OS details, and categorizes storage waste (Windows Temp, Downloads, Recycle Bin).
-- **Premium Dashboard:** A sleek, dark-mode PySide6 interface that visualizes storage usage and health scores.
-- **Safe Cleaning Engine:** A quarantine-first cleaning engine. High-risk deletions are backed up locally for safe rollback.
-- **AI Advisor Client:** Natural language justifications for why files are marked for deletion, powered by a local Podman AI container.
-- **Deep File Scanner:** Advanced hashlib-based duplicate file scanning and customizable large file detection.
-- **Personalization Engine:** SQLite-based history logs, custom user preferences, and dynamic ignore lists.
-- **Automated Maintenance:** Background scheduling using Windows Task Scheduler integration and native PyInstaller packaging.
+## 🛠️ Technology Stack
+
+| Layer | Tool | Purpose |
+|---|---|---|
+| **GUI** | PySide6 6.6+ | Native Windows desktop UI |
+| **Glassmorphism** | win32mica | Windows 11 Mica DWM backdrop |
+| **Charts** | pyqtgraph | Hardware-accelerated storage graphs |
+| **System Metrics** | psutil | Real-time CPU / RAM / Disk monitoring |
+| **File I/O** | pathlib + os | Safe, cross-version filesystem operations |
+| **AI Chat Client** | requests + QThread | Async HTTP to local FastAPI backend |
+| **AI Backend** | FastAPI + uvicorn | REST API inside Podman container |
+| **LLM Engine** | Ollama | Local model runner (llama3.2:1b) |
+| **Containerisation** | Podman + podman-compose | Isolated AI sandbox via WSL2 |
+| **Database** | SQLite3 | Preferences, history, rollback logs |
+| **Testing** | Pytest + pytest-qt | Unit, integration, UI tests (>94% coverage) |
+| **Linting** | Ruff | Zero-warning code quality |
+| **Type Checking** | Mypy | 100% strictly typed codebase |
+| **Security** | Bandit | Zero vulnerabilities |
+| **Complexity** | Radon | Cyclomatic complexity enforcement |
+| **Packaging** | PyInstaller | Single-file Windows `.exe` distribution |
 
 ---
 
 ## 🚀 Installation & Setup
 
 ### Prerequisites
-- **Windows 10/11**
+- **Windows 10 / 11** (Windows 11 recommended for Mica glass effects)
 - **Python 3.12+**
-- **Podman Desktop** (For the AI Container Sandbox)
+- **Podman Desktop** with WSL2 backend ([download](https://podman-desktop.io/))
 
-### 1. Host Setup
-Clone the repository and install the native UI dependencies:
+### Step 1 — Clone & Install Host Dependencies
 
 ```powershell
 git clone https://github.com/abbysweb/AI-Powered-Windows-Cleaner.git
@@ -105,56 +129,91 @@ cd AI-Powered-Windows-Cleaner
 pip install -r requirements.txt
 ```
 
-### 2. AI Backend Setup (Podman)
-Ensure Podman is running in WSL2, then spin up the backend API:
+### Step 2 — Start the AI Backend (Podman)
 
 ```powershell
+# Build and start both containers (FastAPI + Ollama)
 podman-compose up -d --build
 ```
 
-### 3. Run the Copilot
-Launch the native desktop application:
+### Step 3 — Pull the AI Model (first time only)
+
+```powershell
+podman exec ai-powered-windows-cleaner_ollama_1 ollama pull llama3.2:1b
+```
+
+### Step 4 — Run the App
 
 ```powershell
 python src/ai_health_copilot/main.py
 ```
 
+> **Tip:** The first AI response takes ~15-30s (model cold start). Subsequent responses are faster.
+
 ---
 
-## 🛡 Security & Quality Gates
-This project enforces a stringent, phase-based development methodology mandated by `AGENTS.md`. No features are committed unless they pass a strict set of quality gates, evaluated automatically by `system_diagnosis.py`:
-- **Code Quality (Ruff):** 100% compliance.
-- **Architecture (Mypy):** 100% strictly typed.
-- **Security (Bandit):** Zero security warnings (shell-safe, robust cryptography).
-- **Complexity (Radon):** All functions strictly monitored for cyclomatic complexity.
-- **Automated Tests (Pytest):** >94% test coverage with automated performance validation (memory leak & execution speed checks).
+## 🩺 System Health & Quality Gates
 
-Run the full system audit suite locally:
-```bash
+Every commit passes a full automated audit via `system_diagnosis.py`:
+
+```powershell
 python src/ai_health_copilot/scripts/system_diagnosis.py
 ```
 
+```
+==================================================
+ AI WINDOWS HEALTH COPILOT - FULL SYSTEM DIAGNOSIS
+==================================================
+Code Quality (Ruff)  : [PASS] No linting errors found
+Unit Tests (Pytest)  : [PASS] 36 passed in 5.58s
+Architecture (Mypy)  : [PASS] Type checking passed
+Complexity (Radon)   : [PASS] Complexity within acceptable limits (A/B grades)
+--------------------------------------------------
+OVERALL HEALTH SCORE : 100 / 100
+--------------------------------------------------
+```
+
+| Gate | Tool | Requirement |
+|---|---|---|
+| Code Quality | Ruff | 0 warnings |
+| Type Safety | Mypy | 100% typed |
+| Security | Bandit | 0 vulnerabilities |
+| Complexity | Radon | A/B grade only |
+| Test Coverage | Pytest | ≥ 94% |
+
 ---
 
-## 🗺 Roadmap
+## 🗺 Roadmap (Completed Phases)
 
-- [x] **Phase 1:** Project Initialization & Architecture Design
-- [x] **Phase 2:** Core Scanning Engine
-- [x] **Phase 3:** Premium UI/UX Dashboard
-- [x] **Phase 4:** Safe Cleaning Engine & Rollback
-- [x] **Phase 5:** Advanced AI Layer (Ollama + Llama)
-- [x] **Phase 6:** Deep File Scanning (Large Files & Duplicates)
-- [x] **Phase 7:** Personalization & Learning Engine (SQLite, Ignore Lists)
-- [x] **Phase 8:** Final Polish, Scheduling, & Packaging
-- [x] **Phase 9:** Premium UI Overhaul (Multi-view, Charts, AI Chat)
-- [x] **Phase 10:** Architectural Refactoring & 95% Coverage Compliance
+- [x] **Phase 1–2:** Project architecture & core scanning engine
+- [x] **Phase 3:** PySide6 premium dashboard UI
+- [x] **Phase 4:** Safe cleaning engine with quarantine & rollback
+- [x] **Phase 5:** AI layer — Ollama + Llama integration
+- [x] **Phase 6:** Large file & duplicate file detection
+- [x] **Phase 7:** SQLite personalization (history, ignore lists, preferences)
+- [x] **Phase 8:** Windows Task Scheduler integration & PyInstaller packaging
+- [x] **Phase 9:** Multi-view architecture (Dashboard, Scanner, AI Chat, History, Settings)
+- [x] **Phase 10:** 95%+ test coverage & architectural refactoring
+- [x] **Phase 11:** Security hardening (Bandit, path-traversal protection)
+- [x] **Phase 12:** Glassmorphic Windows 11 UI (win32mica Mica backdrop)
+- [x] **Phase 13:** Light mode & blue accent redesign + QLayout bug fix
+- [x] **Phase 14:** Full AI backend + frontend integration (QThread chat, live metrics injection)
+
+**Upcoming:**
+- [ ] **Phase 15:** Streaming AI responses (token-by-token display)
+- [ ] **Phase 16:** History & Rollback view (restore deleted files)
+- [ ] **Phase 17:** Settings view (AI model selector, scan targets, scheduler config)
 
 ---
 
 ## 👨‍💻 Author
 
 **Abdullah Al Mamun**  
-*BSc, MSc - Software Engineering*  
+*BSc, MSc — Software Engineering*  
 TU Wien (Vienna, Austria) & Daffodil International University  
-📧 mamun.swe.de@gmail.com | 🌐 [https://github.com/abbysweb](https://github.com/abbysweb)  
+📧 mamun.swe.de@gmail.com | 🌐 [github.com/abbysweb](https://github.com/abbysweb)  
 🎓 ORCID: [0009-0006-7473-0024](https://orcid.org/0009-0006-7473-0024)
+
+---
+
+*Built with ❤️ in Vienna — a production-quality, enterprise-grade Windows maintenance tool.*
