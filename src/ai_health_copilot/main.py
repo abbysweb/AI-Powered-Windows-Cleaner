@@ -21,9 +21,10 @@ def main():
     logger.info("Starting AI Windows Health Copilot...")
     app = QApplication(sys.argv)
 
-    # Global stylesheet for dark mode
+    # Global stylesheet for dark mode glassmorphism
     app.setStyleSheet("""
-        QWidget { background-color: #1E1E1E; color: #FFFFFF; font-family: 'Segoe UI', sans-serif; }
+        QMainWindow, QStackedWidget { background-color: transparent; }
+        QWidget { color: #FFFFFF; font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif; }
     """)
 
     window = MainWindow()

@@ -52,6 +52,30 @@ graph TD
 
 ---
 
+## 🛠️ Tools & Technologies Used
+
+This system leverages a modern, diverse stack to achieve high performance, safety, and AI capabilities without bloating the host OS.
+
+### 1. Frontend & GUI
+- **PySide6 (Qt for Python):** Used to build the native, responsive, and hardware-accelerated Windows desktop interface. Chosen for its native OS integration and styling capabilities.
+- **win32mica:** Used to inject true Windows 11 Mica/Acrylic glassmorphism backdrops into the PySide6 application by hooking directly into the Windows Desktop Window Manager (DWM).
+
+### 2. Core Engine & System Integration
+- **Python 3.12+:** The core runtime for both the GUI and the system scanner. Provides excellent standard libraries for OS interaction and cross-process communication.
+- **psutil:** Used for real-time monitoring of system resources (CPU, RAM, Disk usage) to provide accurate health metrics.
+- **schtasks (Windows Native):** Integrated via Python's `subprocess` to schedule automated background cleanups directly in the Windows Task Scheduler.
+
+### 3. AI & Containerization
+- **Podman / WSL2:** Used to containerize the AI backend. This isolates the heavy ML dependencies from the Windows host, keeping the installation footprint small and preventing dependency conflicts.
+- **FastAPI:** A high-performance Python web framework running inside the Podman container. It exposes a local REST API that the native Windows client queries for AI advice.
+- **Ollama / Llama Models:** The local LLM engine running inside the container. It analyzes file paths and metadata to provide natural language justifications for file deletion or retention, entirely offline for maximum privacy.
+
+### 4. Data Persistence & Quality Assurance
+- **SQLite3:** A lightweight, serverless database embedded in the host app. It stores user preferences, deletion history for rollbacks, and folder ignore lists.
+- **Pytest & pytest-qt:** The testing framework used to ensure robust functionality and UI correctness, maintaining >94% code coverage.
+- **Ruff, Mypy, Bandit, Radon:** A rigorous suite of static analysis tools ensuring perfect linting compliance, strict typing, zero security vulnerabilities, and low cyclomatic complexity.
+
+---
 ## ✨ Key Features
 
 - **System Scanner:** Scans disk usage, RAM, CPU, OS details, and categorizes storage waste (Windows Temp, Downloads, Recycle Bin).

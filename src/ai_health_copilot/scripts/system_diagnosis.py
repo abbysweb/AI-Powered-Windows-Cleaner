@@ -24,8 +24,8 @@ def check_tests() -> tuple[bool, str, str]:
     success, output = run_command(["python", "-m", "pytest", "tests/"])
 
     # Extract summary
-    match = re.search(r"==== (.*?) ====", output.splitlines()[-1] if output else "")
-    summary = match.group(1) if match else "Unknown results"
+    matches = re.findall(r"={2,}\s+(.*?)\s+={2,}", output)
+    summary = matches[-1] if matches else "Unknown results"
 
     # Count passed/failed
 

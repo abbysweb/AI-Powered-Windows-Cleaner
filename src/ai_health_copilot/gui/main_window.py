@@ -1,3 +1,4 @@
+import sys
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
@@ -17,11 +18,31 @@ from ai_health_copilot.gui.views.overview import OverviewWidget
 from ai_health_copilot.gui.views.scanner_results import ScannerResultsWidget
 
 
+try:
+    from win32mica import ApplyMica, MicaTheme, MicaStyle
+    MICA_AVAILABLE = True
+except ImportError:
+    MICA_AVAILABLE = False
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AI Windows Health Copilot")
         self.resize(1200, 800)
+        
+        # Enable translucent background for Mica
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        
+        if MICA_AVAILABLE and sys.platform == "win32":
+            try:
+                # Apply Mica backdrop to the window handle
+                hwnd = int(self.winId())
+                ApplyMica(hwnd, MicaTheme.DARK, MicaStyle.DEFAULT)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to apply Mica: {e}")
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -36,13 +57,13 @@ class MainWindow(QMainWindow):
         self.sidebar = QFrame()
         self.sidebar.setFixedWidth(250)
         self.sidebar.setStyleSheet(
-            "QFrame { background-color: #1A1A1A; border-right: 1px solid #333333; }"
+            "QFrame { background-color: rgba(30, 30, 30, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.1); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }"
             "QPushButton { "
-            "   text-align: left; padding: 15px 20px; font-size: 16px; "
-            "   background-color: transparent; color: #BDBDBD; border: none; "
+            "   text-align: left; padding: 12px 20px; font-size: 15px; margin: 4px 10px; border-radius: 6px; "
+            "   background-color: transparent; color: rgba(255, 255, 255, 0.7); border: none; "
             "}"
-            "QPushButton:hover { background-color: #2D2D2D; color: #FFFFFF; }"
-            "QPushButton:checked { background-color: #2196F3; color: #FFFFFF; font-weight: bold; }"
+            "QPushButton:hover { background-color: rgba(255, 255, 255, 0.1); color: #FFFFFF; }"
+            "QPushButton:checked { background-color: rgba(33, 150, 243, 0.2); color: #2196F3; font-weight: bold; border-left: 4px solid #2196F3; }"
         )
         sidebar_layout = QVBoxLayout(self.sidebar)
         sidebar_layout.setContentsMargins(0, 20, 0, 20)

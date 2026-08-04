@@ -79,11 +79,21 @@ class OverviewWidget(QWidget):
         card = QFrame()
         card.setStyleSheet(
             "QFrame { "
-            "background-color: #242424; "
+            "background-color: rgba(40, 40, 40, 0.5); "
             "border-radius: 12px; "
-            "border: 1px solid #333333; "
+            "border: 1px solid rgba(255, 255, 255, 0.1); "
             "}"
         )
+        
+        # Add a subtle drop shadow for depth
+        from PySide6.QtWidgets import QGraphicsDropShadowEffect
+        from PySide6.QtGui import QColor
+        shadow = QGraphicsDropShadowEffect(card)
+        shadow.setBlurRadius(15)
+        shadow.setColor(QColor(0, 0, 0, 80))
+        shadow.setOffset(0, 4)
+        card.setGraphicsEffect(shadow)
+        
         layout = QVBoxLayout(card)
         title_label = QLabel(title)
         title_label.setStyleSheet(
