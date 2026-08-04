@@ -38,6 +38,10 @@ graph TD
     D ==>|HTTP/REST| H
 ```
 
+**How it works:**
+1. **The Native Host** runs the UI (PySide6) and heavy filesystem operations natively on Windows to maximize performance and safely access critical system files.
+2. **The SQLite Database** acts as the local brain, persisting user preferences, history logs, and folder ignore lists.
+3. **The WSL2/Podman VM** acts as an isolated sandbox for the heavy AI models (Ollama). When the user asks for advice on a file, the FastAPI Client sends an HTTP request to the isolated Container. The Container processes the LLM inference and returns the text justification. This guarantees the user's host Windows machine remains completely free of messy Python ML dependencies and bloated model weights.
 ## Features
 
 - **System Scanner (Phase 1 & 2):** Scans disk usage, RAM, CPU, OS details, and categorizes storage waste (Windows Temp, Downloads, Recycle Bin).
