@@ -31,8 +31,8 @@ This project uses an **Industry-Standard Hybrid Architecture**:
 Clone the repository and install the native dependencies:
 
 ```powershell
-git clone https://github.com/abbysweb/AI-Powered-Windows-Cleaner.git
-cd AI-Powered-Windows-Cleaner
+git clone https://github.com/abbysweb/AI-Windows-Health-Copilot.git
+cd AI-Windows-Health-Copilot
 pip install -r requirements.txt
 ```
 
