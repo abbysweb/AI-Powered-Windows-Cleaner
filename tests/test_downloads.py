@@ -2,7 +2,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from ai_health_copilot.core.cleaner.downloads import DownloadsCleaner
-from ai_health_copilot.core.rollback.manager import QuarantineManager
 
 
 @patch("ai_health_copilot.core.cleaner.downloads.Path.home")
@@ -18,7 +17,7 @@ def test_downloads_scan(mock_home):
 
     mock_downloads.rglob.return_value = [mock_file1]
 
-    cleaner = DownloadsCleaner(quarantine_manager=MagicMock(spec=QuarantineManager))
+    cleaner = DownloadsCleaner()
     result = cleaner.scan()
 
     assert result["file_count"] == 1
@@ -28,23 +27,24 @@ def test_downloads_scan(mock_home):
 
 
 @patch("ai_health_copilot.core.cleaner.downloads.Path.home")
-def test_downloads_delete(mock_home):
-    mock_downloads = MagicMock()
-    mock_home.return_value = mock_downloads
-    mock_downloads.__truediv__.return_value = mock_downloads
-    mock_downloads.exists.return_value = True
+def test_downloads_delete(mock_home, tmp_path):
+    downloads = tmp_path / "Downloads"
+    downloads.mkdir()
+    target = downloads / "file.txt"
+    target.write_text("x")
+    mock_home.return_value = tmp_path
 
-    mock_file = MagicMock(spec=Path)
-    mock_file.is_file.return_value = True
-    mock_file.stat.return_value.st_size = 100
-    mock_downloads.rglob.return_value = [mock_file]
+    class _FakeDb:
+        def get_ignored_folders(self):
+            return []
 
-    mock_qm = MagicMock(spec=QuarantineManager)
+    with patch(
+        "ai_health_copilot.database.manager.DatabaseManager",
+        return_value=_FakeDb(),
+    ):
+        cleaner = DownloadsCleaner()
+        cleaner.scan()
 
-    cleaner = DownloadsCleaner(quarantine_manager=mock_qm)
-    cleaner.scan()
-
-    success = cleaner.delete()
-    assert success is True
-    mock_qm.backup_file.assert_called_once_with(mock_file)
-    mock_file.unlink.assert_called_once_with(missing_ok=True)
+        success = cleaner.delete()
+        assert success is True
+        assert not target.exists()

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from ai_health_copilot.core.rollback.manager import QuarantineManager
+from ai_health_copilot.database import DB_PATH
 
 from .base import BaseCleaner
 
@@ -39,7 +40,7 @@ class DownloadsCleaner(BaseCleaner):
         try:
             from ai_health_copilot.database.manager import DatabaseManager
 
-            db = DatabaseManager()
+            db = DatabaseManager(db_path=str(DB_PATH))
             ignored_paths = set(db.get_ignored_folders())
         except Exception as e:  # pragma: no cover
             logger.debug(f"Scan error: {e}")

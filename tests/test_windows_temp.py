@@ -29,18 +29,18 @@ def test_windows_temp_scan(mock_temp_dir):
     assert cleaner.name == "Windows Temp"
 
 
-@patch("ai_health_copilot.core.cleaner.windows_temp.WINDOWS_TEMP")
-def test_windows_temp_delete(mock_temp_dir):
-    # Setup mock
-    mock_temp_dir.exists.return_value = True
-    mock_file = MagicMock(spec=Path)
-    mock_file.is_file.return_value = True
-    mock_file.stat.return_value.st_size = 100
-    mock_temp_dir.rglob.return_value = [mock_file]
+def test_windows_temp_delete(tmp_path, monkeypatch):
+    from ai_health_copilot.core.cleaner import windows_temp as wt
+
+    target_dir = tmp_path / "WindowsTemp"
+    target_dir.mkdir()
+    monkeypatch.setattr(wt, "WINDOWS_TEMP", target_dir)
+    target = target_dir / "junk.tmp"
+    target.write_text("data")
 
     cleaner = WindowsTempCleaner()
     cleaner.scan()
 
     success = cleaner.delete()
     assert success is True
-    mock_file.unlink.assert_called_once_with(missing_ok=True)
+    assert not target.exists()

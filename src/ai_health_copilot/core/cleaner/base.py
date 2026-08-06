@@ -5,6 +5,8 @@ from typing import Any
 
 from ai_health_copilot.core.rollback.manager import QuarantineManager
 
+from .delete import DELETED, SKIPPED, permanent_delete
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,12 +36,14 @@ class BaseCleaner(ABC):
     def delete(self) -> bool:
         success = True
         for path in self._files:
-            try:
-                self.qm.backup_file(path)
-                path.unlink(missing_ok=True)
-            except Exception as e:  # pragma: no cover
-                logger.error(f"Failed to delete {path}: {e}")
-                success = False
+            outcome = permanent_delete(path)
+            if outcome == DELETED:
+                continue
+            if outcome == SKIPPED:
+                logger.warning("Skipping protected file: %s", path)
+                continue
+            logger.error("Failed to delete %s", path)
+            success = False
         return success
 
     def rollback(self) -> bool:

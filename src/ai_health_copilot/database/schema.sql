@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS History (
     action_type TEXT NOT NULL,
     target TEXT NOT NULL,
     size_bytes INTEGER DEFAULT 0,
+    backup_path TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

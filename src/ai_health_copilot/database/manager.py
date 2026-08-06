@@ -27,6 +27,14 @@ class DatabaseManager:
 
         with sqlite3.connect(self.db_path) as conn, open(self.schema_path, "r") as f:
             conn.executescript(f.read())
+            self._migrate(conn)
+
+    def _migrate(self, conn: sqlite3.Connection):
+        """Applies lightweight schema migrations to existing databases."""
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(History)")}
+        if "backup_path" not in cols:
+            conn.execute("ALTER TABLE History ADD COLUMN backup_path TEXT")
+            conn.commit()
 
     def get_preference(self, key: str, default: str = "") -> str:
         with sqlite3.connect(self.db_path) as conn:
@@ -65,12 +73,14 @@ class DatabaseManager:
             cur.execute("SELECT path FROM IgnoredFolders")
             return [row[0] for row in cur.fetchall()]
 
-    def log_history(self, action_type: str, target: str, size_bytes: int):
+    def log_history(self, action_type: str, target: str, size_bytes: int,
+                    backup_path: str | None = None):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
             cur.execute(
-                "INSERT INTO History (action_type, target, size_bytes) VALUES (?, ?, ?)",
-                (action_type, target, size_bytes),
+                "INSERT INTO History (action_type, target, size_bytes, backup_path) "
+                "VALUES (?, ?, ?, ?)",
+                (action_type, target, size_bytes, backup_path),
             )
             conn.commit()
 
@@ -80,3 +90,9 @@ class DatabaseManager:
             cur = conn.cursor()
             cur.execute("SELECT * FROM History ORDER BY timestamp DESC")
             return [dict(row) for row in cur.fetchall()]
+
+    def delete_history(self, record_id: int):
+        with sqlite3.connect(self.db_path) as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM History WHERE id = ?", (record_id,))
+            conn.commit()

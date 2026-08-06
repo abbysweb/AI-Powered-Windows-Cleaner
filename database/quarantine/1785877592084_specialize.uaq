@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<actions>
+    <action index="0"
+            command="C:\WINDOWS\SYSTEM32\SETUPUGC.EXE"
+            arguments=""
+            identity="Microsoft-Windows-Deployment, Culture=neutral, Version=10.0.26100.1591, PublicKeyToken=31bf3856ad364e35, ProcessorArchitecture=amd64, versionScope=NonSxS"
+            manifestPath="C:\WINDOWS\Winsxs\Manifests\amd64_microsoft-windows-deployment_31bf3856ad364e35_10.0.26100.1591_none_97aef1f19d54d967.manifest"
+            pass="specialize"/>
+</actions>

@@ -1,10 +1,7 @@
 import logging
 import os
-import sqlite3
 from pathlib import Path
 from typing import Any
-
-DB_PATH = "database/storage.db"
 
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
@@ -19,12 +16,51 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ai_health_copilot.core.cleaner.browser_cache import (
+    ChromeCacheCleaner,
+    EdgeCacheCleaner,
+    FirefoxCacheCleaner,
+)
+from ai_health_copilot.core.cleaner.delete import FAILED, SKIPPED, permanent_delete
 from ai_health_copilot.core.cleaner.downloads import DownloadsCleaner
+from ai_health_copilot.core.cleaner.recycle_bin import RecycleBinCleaner
+from ai_health_copilot.core.cleaner.system_cache import (
+    DeliveryOptimizationCleaner,
+    ErrorReportCleaner,
+    FontCacheCleaner,
+    LogFilesCleaner,
+    PrefetchCleaner,
+    ThumbnailCacheCleaner,
+    WindowsUpdateCacheCleaner,
+    WinSxSTempCleaner,
+)
+from ai_health_copilot.core.cleaner.system_cleanup import (
+    CrashDumpCleaner,
+    EmptyFoldersCleaner,
+    ShaderCacheCleaner,
+    StaleLargeFilesCleaner,
+    WindowsOldCleaner,
+)
 from ai_health_copilot.core.cleaner.windows_temp import WindowsTempCleaner
+from ai_health_copilot.database import DB_PATH
+from ai_health_copilot.database.manager import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
 USER_TEMP = Path(os.environ.get("TEMP", Path.home() / "AppData" / "Local" / "Temp"))
+
+
+def _path_size(path: str | Path) -> int:
+    """Total size of a file, or of an entire directory tree."""
+    target = Path(path)
+    try:
+        if target.is_dir():
+            return sum(
+                f.stat().st_size for f in target.rglob("*") if f.is_file()
+            )
+        return target.stat().st_size
+    except (OSError, PermissionError):
+        return 0
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -42,6 +78,22 @@ class ScanWorker(QThread):
         cleaners = [
             WindowsTempCleaner(),
             DownloadsCleaner(),
+            ChromeCacheCleaner(),
+            EdgeCacheCleaner(),
+            FirefoxCacheCleaner(),
+            ThumbnailCacheCleaner(),
+            WindowsUpdateCacheCleaner(),
+            DeliveryOptimizationCleaner(),
+            ErrorReportCleaner(),
+            PrefetchCleaner(),
+            LogFilesCleaner(),
+            WinSxSTempCleaner(),
+            FontCacheCleaner(),
+            ShaderCacheCleaner(),
+            CrashDumpCleaner(),
+            EmptyFoldersCleaner(),
+            StaleLargeFilesCleaner(),
+            WindowsOldCleaner(),
         ]
         total = len(cleaners)
 
@@ -53,10 +105,13 @@ class ScanWorker(QThread):
             try:
                 cleaner.scan()
                 for file_path in cleaner._files:
-                    try:
-                        size_bytes = file_path.stat().st_size
-                    except OSError:
-                        size_bytes = 0
+                    if file_path.is_dir():
+                        size_bytes = cleaner.calculate_size()
+                    else:
+                        try:
+                            size_bytes = file_path.stat().st_size
+                        except OSError:
+                            size_bytes = 0
                     results.append(
                         {
                             "name": file_path.name,
@@ -102,47 +157,44 @@ class ScanWorker(QThread):
 # Delete worker
 # ──────────────────────────────────────────────────────────────────────────────
 class DeleteWorker(QThread):
-    """Safely deletes selected files in a background thread."""
+    """Permanently deletes selected files in a background thread.
+
+    Items are removed immediately to free disk space. Sensitive paths
+    (passwords, autofill, cookies, login data) are always skipped.
+    """
 
     progress = Signal(int, str)
-    finished = Signal(int, int)    # (deleted_count, failed_count)
+    finished = Signal(int, int, int)    # (deleted_count, failed_count, skipped_count)
 
     def __init__(self, paths: list[str], parent=None):
         super().__init__(parent)
         self.paths = paths
+        self._db = DatabaseManager(db_path=str(DB_PATH))
 
     def run(self) -> None:
         deleted = 0
         failed = 0
+        skipped = 0
         total = len(self.paths)
         for idx, file_path_str in enumerate(self.paths):
             self.progress.emit(
                 int((idx / total) * 100),
                 f"Deleting {Path(file_path_str).name}…",
             )
-            try:
-                file_path = Path(file_path_str)
-                size_bytes = 0
-                try:
-                    size_bytes = file_path.stat().st_size
-                except OSError:
-                    pass
-                file_path.unlink(missing_ok=True)
-                # Log deletion to SQLite history
-                try:
-                    with sqlite3.connect(DB_PATH) as conn:
-                        conn.execute(
-                            "INSERT INTO History (action_type, target, size_bytes) VALUES (?, ?, ?)",
-                            ("DELETE", file_path_str, size_bytes),
-                        )
-                        conn.commit()
-                except Exception as db_exc:
-                    logger.warning("Failed to log deletion to DB: %s", db_exc)
-                deleted += 1
-            except Exception as exc:
-                logger.warning("Failed to delete %s: %s", file_path_str, exc)
+            size_bytes = _path_size(file_path_str)
+            outcome = permanent_delete(file_path_str)
+            if outcome == SKIPPED:
+                skipped += 1
+                continue
+            if outcome == FAILED:
                 failed += 1
-        self.finished.emit(deleted, failed)
+                continue
+            try:
+                self._db.log_history("DELETE", file_path_str, size_bytes)
+            except Exception as db_exc:
+                logger.warning("Failed to log deletion to DB: %s", db_exc)
+            deleted += 1
+        self.finished.emit(deleted, failed, skipped)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -174,6 +226,16 @@ class ScannerResultsWidget(QWidget):
         self.btn_scan.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_scan.clicked.connect(self.start_scan)
         header_row.addWidget(self.btn_scan)
+
+        self.btn_recycle = QPushButton("🗑  Empty Recycle Bin")
+        self.btn_recycle.setStyleSheet(
+            "padding: 10px 18px; background-color: #607D8B; color: white; "
+            "border-radius: 6px; font-size: 13px; font-weight: bold;"
+        )
+        self.btn_recycle.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_recycle.clicked.connect(self.empty_recycle_bin)
+        header_row.addWidget(self.btn_recycle)
+
         layout.addLayout(header_row)
 
         # ── Summary label ────────────────────────────────────────────────────
@@ -290,8 +352,15 @@ class ScannerResultsWidget(QWidget):
             self.tree.addTopLevelItem(item)
 
         self.tree.blockSignals(False)
+        breakdown = ", ".join(
+            f"{category}: {count}"
+            for category, count in sorted(
+                self._category_counts(results).items(), key=lambda kv: kv[0]
+            )
+        )
         self.lbl_summary.setText(
-            f"Found {len(results)} files  |  Total size: {self._fmt_size(total_size)}"
+            f"Found {len(results)} files  |  {breakdown}  |  "
+            f"Total size: {self._fmt_size(total_size)}"
         )
         self.btn_scan.setEnabled(True)
         self.btn_delete.setEnabled(len(results) > 0)
@@ -305,10 +374,23 @@ class ScannerResultsWidget(QWidget):
             QMessageBox.information(self, "Nothing Selected", "Please check at least one file to delete.")
             return
 
+        checked = set(selected_paths)
+        chosen = [r for r in self._scan_results if r["full_path"] in checked]
+        breakdown = ", ".join(
+            f"{category}: {count}"
+            for category, count in sorted(
+                self._category_counts(chosen).items(), key=lambda kv: kv[0]
+            )
+        )
+        total = sum(r["size_bytes"] for r in chosen)
+
         reply = QMessageBox.question(
             self,
             "Confirm Deletion",
-            f"Permanently delete {len(selected_paths)} file(s)?\nThis cannot be undone.",
+            f"Permanently delete {len(selected_paths)} item(s) (~{self._fmt_size(total)})?\n"
+            f"{breakdown}\n\n"
+            "This is permanent and cannot be undone.\n"
+            "Passwords, autofill, cookies and login data are ALWAYS protected and will be skipped.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:
@@ -328,15 +410,38 @@ class ScannerResultsWidget(QWidget):
         self.progress_bar.setValue(percent)
         self.lbl_summary.setText(text)
 
-    def _on_delete_finished(self, deleted: int, failed: int) -> None:
+    def _on_delete_finished(self, deleted: int, failed: int, skipped: int) -> None:
         self.progress_bar.setVisible(False)
         self.btn_scan.setEnabled(True)
-        msg = f"✅ Deleted {deleted} file(s) successfully."
+        msg = f"✅ Deleted {deleted} item(s) successfully."
         if failed:
-            msg += f"  ⚠ {failed} file(s) could not be deleted (in use or access denied)."
+            msg += f"  ⚠ {failed} could not be deleted (in use or access denied)."
+        if skipped:
+            msg += (
+                f"\n🛡 {skipped} protected item(s) skipped "
+                "(passwords/autofill/login data are never deleted)."
+            )
         QMessageBox.information(self, "Cleanup Complete", msg)
         # Re-scan to refresh the list
         self.start_scan()
+
+    def empty_recycle_bin(self) -> None:
+        reply = QMessageBox.question(
+            self,
+            "Empty Recycle Bin",
+            "Permanently empty the Recycle Bin?\nThis cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        cleaner = RecycleBinCleaner()
+        if cleaner.delete():
+            QMessageBox.information(self, "Recycle Bin", "✅ Recycle Bin emptied.")
+        else:
+            QMessageBox.warning(
+                self, "Recycle Bin", "Could not empty the Recycle Bin."
+            )
 
     # ── Helpers ───────────────────────────────────────────────────────────────
     def _get_checked_paths(self) -> list[str]:
@@ -380,3 +485,10 @@ class ScannerResultsWidget(QWidget):
         if size_bytes >= 1024:
             return f"{size_bytes / 1024:.1f} KB"
         return f"{size_bytes} B"
+
+    @staticmethod
+    def _category_counts(results: list[dict[str, Any]]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for r in results:
+            counts[r["category"]] = counts.get(r["category"], 0) + 1
+        return counts

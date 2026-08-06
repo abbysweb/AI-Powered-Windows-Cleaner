@@ -15,6 +15,10 @@
 
 ---
 
+**Read the Full Documentation:** [Enterprise System Report (PDF)](Enterprise_Report/main.pdf)
+
+---
+
 ## 🏗 Architecture
 
 This project uses a **Hybrid Architecture** — a native Windows GUI talks to a containerised AI backend over a local REST API.
@@ -68,7 +72,7 @@ sequenceDiagram
     participant DB as 🗄 SQLite Database
     participant FS as 📁 Windows Filesystem
     participant AV as 💬 AI Chat (AIChatWidget)
-    participant CT as 🔄 ChatThread (QThread)
+    participant CT as 🔄 StreamingWorker (QThread)
     participant HW as 🛰 System Metrics (psutil)
     participant BK as ⚙ FastAPI Backend
     participant OL as 🤖 Ollama (llama3.2:1b)
@@ -130,7 +134,7 @@ sequenceDiagram
     rect rgb(245, 240, 255)
         Note over U,DB: 5. AI Health Advisor (streaming-ready)
         U->>AV: ask a question
-        AV->>CT: start ChatThread (QThread)
+        AV->>CT: start StreamingWorker (QThread)
         CT->>HW: collect_system_context()
         HW-->>CT: live CPU / RAM / disk metrics
         CT->>BK: POST /api/advisor (enriched prompt)
@@ -258,6 +262,17 @@ AI-Powered-Windows-Cleaner/
 - Non-blocking async responses using `QThread` (UI stays responsive)
 - Send via button click or `Enter` key
 - Typing indicator ("AI is thinking...")
+
+### 🖼 Multi-Modal Vision (Image Analysis)
+- **Attach Image** button (PNG / JPG / WebP, max 10MB) with inline thumbnail preview
+- **"Analyze Error Dialog"** quick action to explain a screenshot of an error dialog
+- Sends the image to the `/api/vision/analyze` endpoint backed by the local Ollama vision model (e.g. `llava:7b`)
+- Client-side validation (magic-byte format check + size limit) before any upload
+- Non-blocking analysis via a dedicated `QThread` worker
+
+> **Note:** Image analysis needs a multimodal model. Pull one once, e.g.
+> `podman exec ai-powered-windows-cleaner_ollama_1 ollama pull llava:7b`.
+> If no vision model is installed the AI advisor falls back to text answers.
 
 ### 🛡 Security & Safety
 - Quarantine-first deletion: files backed up before removal
@@ -406,8 +421,8 @@ OVERALL HEALTH SCORE : 100 / 100
 ## 🌟 Future Roadmap (Phases 15+)
 
 ### Phase 15: Enhanced AI Capabilities
-- [ ] **Streaming AI Responses** — Token-by-token display for better UX
-- [ ] **Multi-modal Reasoning** — Support for image analysis of error dialogs
+- [x] **Streaming AI Responses** — Token-by-token display for better UX
+- [x] **Multi-modal Reasoning** — Support for image analysis of error dialogs
 - [ ] **Conversational Memory** — AI remembers previous interactions
 
 ### Phase 16: History & Recovery System
