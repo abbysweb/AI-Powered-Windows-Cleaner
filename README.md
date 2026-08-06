@@ -18,7 +18,13 @@
 
 ---
 
-**Read the Full Documentation:** [Enterprise System Report (PDF)](Enterprise_Report/main.pdf)
+## 📄 Project Report
+
+Full project documentation is available as an Enterprise Software Architecture & System Report (PDF):
+
+- 📘 **[AI-Powered-Windows-Cleaner — Enterprise Report (PDF)](Enterprise_Report/main.pdf)**
+
+The report covers requirement analysis, the Agile development lifecycle, detailed module designs, database schemas, the AI architecture, security model, testing strategy, deployment, and quality gates.
 
 ---
 
