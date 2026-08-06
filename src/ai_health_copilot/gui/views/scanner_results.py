@@ -75,7 +75,15 @@ class ScanWorker(QThread):
 
     def run(self) -> None:
         results: list[dict[str, Any]] = []
-        cleaners = [
+        results.extend(self._scan_cleaners())
+        results.extend(self._scan_user_temp())
+        results.sort(key=lambda r: r["size_bytes"], reverse=True)
+        self.progress.emit(100, f"Scan complete — {len(results)} files found.")
+        self.scan_complete.emit(results)
+
+    @staticmethod
+    def _build_cleaners() -> list[Any]:
+        return [
             WindowsTempCleaner(),
             DownloadsCleaner(),
             ChromeCacheCleaner(),
@@ -95,8 +103,11 @@ class ScanWorker(QThread):
             StaleLargeFilesCleaner(),
             WindowsOldCleaner(),
         ]
-        total = len(cleaners)
 
+    def _scan_cleaners(self) -> list[dict[str, Any]]:
+        results: list[dict[str, Any]] = []
+        cleaners = self._build_cleaners()
+        total = max(1, len(cleaners))
         for idx, cleaner in enumerate(cleaners):
             self.progress.emit(
                 int((idx / total) * 80),
@@ -104,53 +115,61 @@ class ScanWorker(QThread):
             )
             try:
                 cleaner.scan()
-                for file_path in cleaner._files:
-                    if file_path.is_dir():
-                        size_bytes = cleaner.calculate_size()
-                    else:
-                        try:
-                            size_bytes = file_path.stat().st_size
-                        except OSError:
-                            size_bytes = 0
-                    results.append(
-                        {
-                            "name": file_path.name,
-                            "path": str(file_path.parent),
-                            "full_path": str(file_path),
-                            "category": cleaner.name,
-                            "size_bytes": size_bytes,
-                            "risk_score": cleaner._risk_score,
-                            "_cleaner": cleaner,
-                        }
-                    )
+                results.extend(self._cleaner_results(cleaner))
             except Exception as exc:  # pragma: no cover
                 logger.warning("Scan error in %s: %s", cleaner.name, exc)
+        return results
 
-        # Also scan User Temp folder
+    def _cleaner_results(self, cleaner: Any) -> list[dict[str, Any]]:
+        results: list[dict[str, Any]] = []
+        for file_path in cleaner._files:
+            size_bytes = self._item_size(file_path, cleaner)
+            results.append(
+                {
+                    "name": file_path.name,
+                    "path": str(file_path.parent),
+                    "full_path": str(file_path),
+                    "category": cleaner.name,
+                    "size_bytes": size_bytes,
+                    "risk_score": cleaner._risk_score,
+                    "_cleaner": cleaner,
+                }
+            )
+        return results
+
+    @staticmethod
+    def _item_size(file_path: Path, cleaner: Any) -> int:
+        if file_path.is_dir():
+            return cleaner.calculate_size()
+        try:
+            return file_path.stat().st_size
+        except OSError:
+            return 0
+
+    def _scan_user_temp(self) -> list[dict[str, Any]]:
         self.progress.emit(85, "Scanning: User Temp…")
-        if USER_TEMP.exists():
-            for file_path in USER_TEMP.rglob("*"):
-                if file_path.is_file():
-                    try:
-                        size_bytes = file_path.stat().st_size
-                    except OSError:
-                        size_bytes = 0
-                    results.append(
-                        {
-                            "name": file_path.name,
-                            "path": str(file_path.parent),
-                            "full_path": str(file_path),
-                            "category": "User Temp",
-                            "size_bytes": size_bytes,
-                            "risk_score": 15,
-                            "_cleaner": None,
-                        }
-                    )
-
-        # Sort by size desc
-        results.sort(key=lambda r: r["size_bytes"], reverse=True)
-        self.progress.emit(100, f"Scan complete — {len(results)} files found.")
-        self.scan_complete.emit(results)
+        if not USER_TEMP.exists():
+            return []
+        results: list[dict[str, Any]] = []
+        for file_path in USER_TEMP.rglob("*"):
+            if not file_path.is_file():
+                continue
+            try:
+                size_bytes = file_path.stat().st_size
+            except OSError:
+                size_bytes = 0
+            results.append(
+                {
+                    "name": file_path.name,
+                    "path": str(file_path.parent),
+                    "full_path": str(file_path),
+                    "category": "User Temp",
+                    "size_bytes": size_bytes,
+                    "risk_score": 15,
+                    "_cleaner": None,
+                }
+            )
+        return results
 
 
 # ──────────────────────────────────────────────────────────────────────────────
