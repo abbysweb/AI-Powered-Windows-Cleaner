@@ -1,15 +1,18 @@
 # AI-Powered Windows Health Copilot
 
-> **Enterprise-grade, AI-driven Windows storage optimization and system health assistant.**  
+> **Enterprise-grade, AI-driven Windows storage optimization and system health assistant.**
 > Powered by a local LLM (Llama 3.2 via Ollama) — 100% offline, 100% private.
 
 **Core Highlights:**
 | | Feature | Description |
 |---|---|---|
 | 🧠 | **Local AI (Ollama + Llama 3.2)** | Offline LLM that analyses your real CPU/RAM/disk metrics and gives contextual advice |
-| ⚡ | **Real-Time File Scanner** | Multi-threaded scanner with progress bar that finds Windows Temp, User Temp & Download junk |
-| 🗑 | **Safe Deletion Engine** | Quarantine-first deletion with full rollback support and confirmation dialogs |
-| 🎨 | **Windows 11 Glassmorphic UI** | True Mica frosted-glass backdrop via `win32mica` + Windows DWM hardware acceleration |
+| ⚡ | **Streaming AI Chat** | Token-by-token SSE responses with live system telemetry injected into every prompt |
+| 🖼 | **Multi-Modal Vision** | Attach a screenshot (PNG/JPG/WebP) and have the local LLaVA model explain error dialogs |
+| 🔍 | **18+ Scan Categories** | Temp files, Downloads, browser caches, Windows Update cache, GPU shaders, crash dumps, WinSxS temp, stale large files & more |
+| 🗑 | **Safe Deletion Engine** | Sensitive-path protection (passwords, cookies, autofill) + quarantine-first rollback support |
+| ↩️ | **History & Rollback** | Full deletion history with one-click restore from the quarantine folder |
+| 📊 | **Live Dashboard** | Real-time CPU / RAM / disk / health-score tiles with a pyqtgraph disk chart |
 | 🐳 | **Containerised AI Backend** | FastAPI + Ollama isolated in Podman (WSL2) — zero ML dependencies on the host OS |
 | 🔒 | **Enterprise Quality Gates** | 100/100 system health score: Ruff, Mypy, Bandit, Radon, Pytest — every commit |
 
@@ -26,35 +29,37 @@ This project uses a **Hybrid Architecture** — a native Windows GUI talks to a 
 ```mermaid
 graph TD
     subgraph "Native Windows Host (Python)"
-        A["🖥 PySide6 GUI Dashboard"] --> B("🔍 Scanner Engine\n(Windows Temp / User Temp / Downloads)")
-        A --> C("🗑 Cleaner & Rollback Engine\n(Quarantine-first deletion)")
-        A --> D["🌐 HTTP Client (requests)"]
+        A["🖥 PySide6 GUI Dashboard"] --> B["🔍 ScanWorker (QThread)"]
+        A --> C["🗑 Cleaner & Rollback Engine"]
+        A --> D["🌐 HTTP Client (requests + SSE)"]
 
         B --> E[("📁 Windows Filesystem")]
         C --> E
 
-        F["⏰ Windows Task Scheduler"] -.->|Auto-clean| C
+        F["⏰ Windows Task Scheduler"] -.->|--silent scan| B
         G[("🗄 SQLite Database\n(History, Prefs, Ignore Lists)")] <-.-> A
+        H["📦 Quarantine Manager"] <-.-> C
     end
 
     subgraph "Podman / WSL2 Container Sandbox"
-        H["⚙ FastAPI Backend\n(port 8000)"]
-        I["🤖 Ollama Engine\n(port 11434)"]
-        J[("📦 llama3.2:1b Model\n~1.3 GB")]
+        I["⚙ FastAPI Backend\n(port 8000)"]
+        J["🤖 Ollama Engine\n(port 11434)"]
+        K[("📦 llama3.2:1b + llava:7b Models")]
 
-        H --> I
         I --> J
+        J --> K
     end
 
-    D ===>|"POST /api/advisor\n(enriched with live metrics)"| H
+    D ===>|"POST /api/chat/stream (SSE)\nPOST /api/advisor\nPOST /api/vision/analyze"| I
 ```
 
 ### How it works end-to-end:
 1. **GUI (PySide6)** collects live CPU/RAM/disk stats using `psutil` and sends them alongside your question to the FastAPI backend.
 2. **FastAPI** (running inside a Podman container) receives the request and calls the local Ollama engine.
-3. **Ollama + Llama 3.2** processes the enriched prompt and returns a contextual, data-driven recommendation.
-4. **The Scanner** runs in a `QThread` worker, populating the tree view with real junk files. You can check boxes and click "Delete Selected" to permanently remove them.
-5. **Rollback** is supported — any deletion is backed up to a quarantine folder before removal.
+3. **Ollama + Llama 3.2** processes the enriched prompt and returns a contextual, data-driven recommendation, streamed back token-by-token over Server-Sent Events.
+4. **The Scanner** runs in a `QThread` worker, populating a sortable tree view with real junk files across 18+ categories. You can check boxes and click "Delete Selected" to remove them.
+5. **Sensitive paths are always protected** — passwords, cookies, autofill and login data are skipped by the safety engine.
+6. **Rollback is supported** — deletions with quarantine backups can be restored from the History & Rollback view.
 
 ### Detailed Full-System Sequence Diagram
 
@@ -62,10 +67,9 @@ graph TD
 sequenceDiagram
     autonumber
     actor U as 🧑 User
-    participant RB as 🚀 Run Bot
     participant G as 🖥 PySide6 GUI (MainWindow)
     participant OV as 📊 Dashboard (OverviewWidget)
-    participant SV as 🔍 Scanner View
+    participant SV as 🔍 Scanner Results View
     participant SW as ⚙ ScanWorker (QThread)
     participant CL as 🗑 Cleaner Engine
     participant QB as 📦 Quarantine Manager
@@ -75,28 +79,18 @@ sequenceDiagram
     participant CT as 🔄 StreamingWorker (QThread)
     participant HW as 🛰 System Metrics (psutil)
     participant BK as ⚙ FastAPI Backend
-    participant OL as 🤖 Ollama (llama3.2:1b)
+    participant OL as 🤖 Ollama (llama3.2:1b / llava:7b)
 
     rect rgb(240, 246, 255)
-        Note over RB,G: 1. One-Click Startup (Run Bot)
-        RB->>BK: GET /health
-        alt backend healthy
-            BK-->>RB: 200 healthy
-        else not running
-            RB->>RB: podman-compose up -d --build
-            loop poll every 2s (max 120s)
-                RB->>BK: GET /health
-                BK-->>RB: 200 once ready
-            end
-        end
-        RB->>G: launch app (python main.py)
+        Note over G,BK: 1. One-Click Startup (Run Bot)
+        U->>G: run_bot.py → launch app
         G->>OV: create OverviewWidget
         G->>SV: create ScannerResultsWidget
         G->>AV: create AIChatWidget
     end
 
     rect rgb(235, 245, 235)
-        Note over G,DB: 2. Live Dashboard Metrics
+        Note over G,HW: 2. Live Dashboard Metrics
         loop every 3 s
             OV->>HW: cpu_percent / virtual_memory / disk_usage
             HW-->>OV: live CPU, RAM, disk metrics
@@ -105,55 +99,66 @@ sequenceDiagram
     end
 
     rect rgb(255, 248, 235)
-        Note over U,SV: 3. Deep Scan
+        Note over U,SV: 3. Deep Scan (18+ categories)
         U->>SV: Start Deep Scan
         SV->>SW: worker.start()
-        SW->>CL: scan() [WindowsTemp, Downloads]
-        CL->>FS: rglob temp / downloads folders
+        SW->>CL: scan() for each cleaner
+        CL->>FS: rglob temp / cache / downloads folders
         FS-->>CL: matching files + sizes
         CL-->>SW: file list with category & risk score
-        SW->>SW: also scan %TEMP%, sort by size
         SW-->>SV: scan_complete(results)
         SV->>SV: populate sortable tree + progress bar
         SV-->>U: show junk files & total size
     end
 
     rect rgb(255, 235, 235)
-        Note over U,DB: 4. Quarantine-First Deletion
+        Note over U,DB: 4. Protected Deletion + History
         U->>SV: check files → Delete Selected
-        SV->>CL: delete() for each selected path
-        CL->>QB: backup_file(path)
-        QB->>FS: copy2 → cache/quarantine
+        SV->>CL: permanent_delete() for each selected path
+        CL->>CL: skip sensitive paths (passwords/cookies)
         CL->>FS: unlink(path)
         CL->>DB: INSERT INTO History (DELETE, path, size)
-        CL-->>SV: finished(deleted, failed)
+        CL-->>SV: finished(deleted, failed, skipped)
         SV->>SV: auto re-scan to refresh results
         SV-->>U: cleanup summary dialog
     end
 
     rect rgb(245, 240, 255)
-        Note over U,DB: 5. AI Health Advisor (streaming-ready)
+        Note over U,BK: 5. Streaming AI Health Advisor
         U->>AV: ask a question
         AV->>CT: start StreamingWorker (QThread)
         CT->>HW: collect_system_context()
         HW-->>CT: live CPU / RAM / disk metrics
-        CT->>BK: POST /api/advisor (enriched prompt)
-        BK->>OL: client.chat(llama3.2:1b)
-        OL-->>BK: AI recommendation
-        BK-->>CT: JSON recommendation payload
-        CT-->>AV: response_received(text)
-        AV->>AV: render in chat area
+        CT->>BK: POST /api/chat/stream (SSE)
+        BK->>OL: client.chat(stream=True)
+        OL-->>BK: token-by-token stream
+        BK-->>CT: data: {"type": "token", ...}
+        CT-->>AV: token_received(text)
+        AV->>AV: render token-by-token in chat area
         AV-->>U: AI data-driven advice
     end
 
+    rect rgb(255, 240, 250)
+        Note over U,BK: 6. Multi-Modal Vision (error dialogs)
+        U->>AV: Attach Image / Analyze Error Dialog
+        AV->>CT: start VisionWorker (QThread)
+        CT->>BK: POST /api/vision/analyze (base64 image)
+        BK->>BK: validate magic bytes + size limit
+        BK->>OL: generate(llava:7b, image)
+        OL-->>BK: image analysis
+        BK-->>CT: {"analysis": "..."}
+        CT-->>AV: result_received(analysis)
+        AV-->>U: explained error dialog
+    end
+
     rect rgb(235, 245, 250)
-        Note over U,DB: 6. History & Rollback
-        U->>SV: delete files (logged to History)
-        SV->>DB: write History records
+        Note over U,DB: 7. History & Rollback
         U->>G: open History / Rollback view
         G->>DB: get_history()
         DB-->>G: all action records
-        G-->>U: table of deletions & restores
+        U->>G: select record → Restore
+        G->>QB: restore_path(backup → original)
+        G-->>U: file restored to original location
     end
 ```
 
@@ -174,7 +179,8 @@ AI-Powered-Windows-Cleaner/
 ├── run_bot.bat                        # Double-click wrapper for run_bot.py
 │
 ├── backend/                           # Containerised AI backend
-│   ├── main.py                        # FastAPI app (POST /api/advisor)
+│   ├── main.py                        # FastAPI app (/health, /api/advisor,
+│   │                                  #   /api/chat/stream, /api/vision/analyze)
 │   ├── requirements.txt               # Backend Python dependencies
 │   └── Containerfile                  # python:3.12-slim image
 │
@@ -182,16 +188,27 @@ AI-Powered-Windows-Cleaner/
 │   └── __init__.py
 │
 ├── src/ai_health_copilot/             # Main application package
-│   ├── main.py                        # Entry point (QApplication + MainWindow)
+│   ├── main.py                        # Entry point (GUI or --silent scan)
 │   ├── ai/
-│   │   └── advisor.py                 # AI backend HTTP client
+│   │   ├── advisor.py                 # AI backend HTTP client (non-stream)
+│   │   ├── vision.py                  # VisionAnalysisService (client-side)
+│   │   └── prompts/                   # Prompt templates (reserved)
 │   ├── core/
 │   │   ├── analyzer/                  # Recommendation engine (reserved)
+│   │   ├── audit/
+│   │   │   └── software.py            # SoftwareAudit (registry + cache scan)
 │   │   ├── cleaner/
-│   │   │   ├── base.py                # BaseCleaner ABC (quarantine-first delete)
+│   │   │   ├── base.py                # BaseCleaner ABC
+│   │   │   ├── safety.py              # Sensitive-path protection engine
+│   │   │   ├── delete.py              # permanent_delete / safe_delete helpers
 │   │   │   ├── windows_temp.py        # Windows Temp scan/clean
 │   │   │   ├── downloads.py           # Downloads scan/clean (ignore-list aware)
-│   │   │   └── recycle_bin.py         # Recycle Bin empty via ctypes
+│   │   │   ├── recycle_bin.py         # Recycle Bin empty via ctypes
+│   │   │   ├── browser_cache.py       # Chrome / Edge / Firefox cache cleaners
+│   │   │   ├── system_cache.py        # Thumbnails, Update cache, WER, Prefetch,
+│   │   │   │                          #   Logs, WinSxS temp, Font cache
+│   │   │   └── system_cleanup.py      # Shader cache, crash dumps, empty folders,
+│   │   │                              #   Windows.old, stale large files
 │   │   ├── duplicate/
 │   │   │   └── scanner.py             # Content-aware duplicate detection
 │   │   ├── logger/                    # Logging (reserved)
@@ -204,22 +221,27 @@ AI-Powered-Windows-Cleaner/
 │   │       └── manager.py             # Windows Task Scheduler integration
 │   ├── database/
 │   │   ├── manager.py                 # SQLite CRUD (history, prefs, ignores)
-│   │   └── schema.sql                 # Database schema
+│   │   ├── schema.sql                 # Database schema
+│   │   └── __init__.py                # DB_PATH / QUARANTINE_DIR constants
 │   ├── gui/
-│   │   ├── main_window.py             # Sidebar navigation + stacked views
+│   │   ├── main_window.py             # Sidebar navigation + stacked views (Mica)
 │   │   ├── widgets/                   # Reusable widgets (reserved)
 │   │   └── views/
 │   │       ├── overview.py            # Dashboard (live metrics, disk chart)
 │   │       ├── scanner_results.py     # Deep scan results + deletion workers
-│   │       ├── ai_chat.py             # AI Health Advisor chat
-│   │       └── history.py             # History & rollback table
+│   │       ├── ai_chat.py             # Streaming AI chat + vision workers
+│   │       └── history.py             # History & rollback table + restore worker
 │   └── scripts/
 │       ├── build.py                   # PyInstaller build script
 │       └── system_diagnosis.py        # Full quality-gate audit (100/100)
 │
-├── tests/                             # Pytest suite (49 tests)
+├── tests/                             # Pytest suite (134 passed, 2 skipped)
 │   ├── gui/                           # Qt widget tests (pytest-qt)
-│   ├── test_*.py                      # Unit & integration tests
+│   │   ├── test_main_window.py
+│   │   ├── test_overview.py
+│   │   ├── test_scanner_results.py
+│   │   └── test_ai_chat.py
+│   ├── test_*.py                      # 24 unit & integration test modules
 │   └── performance_test.py            # Performance/load smoke test
 │
 ├── cache/                             # Runtime-generated (quarantine) — gitignored
@@ -236,32 +258,41 @@ AI-Powered-Windows-Cleaner/
 
 ## ✨ Features (Current — All Implemented)
 
-### 🖥 Dashboard
-- Live storage bar chart (used vs. free space via `pyqtgraph`)
-- System health score widget
+### 📊 Dashboard
+- Live storage bar chart (used vs. free space per drive via `pyqtgraph`)
+- System health score widget (0-100, computed from CPU/RAM/disk pressure)
+- Live metric tiles: CPU %, RAM %, uptime, health — refreshed every 3 seconds
+- Top CPU process list + per-drive usage tiles
 - **"Start Deep Scan"** and **"Quick Clean"** buttons wired to the Scanner view
 
-### 🔍 Deep Scan Results
-- Real multi-threaded scanner (`QThread` worker) targeting:
+### 🔍 Deep Scan Results (18+ Categories)
+- Background multi-threaded scanner (`ScanWorker` QThread) covering:
   - `C:\Windows\Temp` — Windows system temp files
   - `%TEMP%` — User-level temp files
   - `%USERPROFILE%\Downloads` — Downloaded installers & archives
+  - **Chrome / Edge / Firefox** browser caches
+  - **Thumbnail Cache**, **Windows Update Cache**, **Delivery Optimization**
+  - **Error Reports (WER)**, **Prefetch**, **Log Files**, **WinSxS Temp**, **Font Cache**
+  - **GPU Shader Cache** (NVIDIA/AMD/Intel/D3D), **Crash Dumps** (Minidump, MEMORY.DMP)
+  - **Empty Folders**, **Windows.old**, **Stale Large Files** (≥100MB, untouched ≥30 days)
 - Live progress bar and status text during scanning
 - Sortable table with: File Name, Location, Category, Size, Risk Level
 - Per-file checkbox selection + **"Select All"** button
 - Selection counter showing total files & total size chosen
-- **"Delete Selected"** with confirmation dialog → permanent deletion via background `DeleteWorker`
+- **"Delete Selected"** with confirmation dialog → background `DeleteWorker`
+- **Sensitive-path protection** — passwords, cookies, autofill, login data are always skipped
 - Auto re-scan after deletion to refresh results
+- **"Empty Recycle Bin"** via the Windows API
 
-### 🤖 AI Health Advisor (Chat)
+### 💬 Streaming AI Health Advisor
 - Conversational UI powered by **local Llama 3.2:1b** (no cloud, no API key)
+- **Token-by-token streaming** responses via SSE (`/api/chat/stream`)
 - Every message is automatically enriched with **live system telemetry**:
   - CPU usage % and core count
   - RAM: used / total / percentage
   - All disk partitions: used / total / percentage
 - Non-blocking async responses using `QThread` (UI stays responsive)
-- Send via button click or `Enter` key
-- Typing indicator ("AI is thinking...")
+- Send via button click or `Enter` key, with typing indicator and cancellation support
 
 ### 🖼 Multi-Modal Vision (Image Analysis)
 - **Attach Image** button (PNG / JPG / WebP, max 10MB) with inline thumbnail preview
@@ -274,10 +305,28 @@ AI-Powered-Windows-Cleaner/
 > `podman exec ai-powered-windows-cleaner_ollama_1 ollama pull llava:7b`.
 > If no vision model is installed the AI advisor falls back to text answers.
 
+### ↩️ History & Rollback
+- SQLite-backed deletion history (action, target, size, backup path, timestamp)
+- **One-click restore** of quarantined files/directories back to their original location
+- Quarantine folder size display + **"Empty Quarantine"** to reclaim space
+- **"Clear History"** (does not touch files or backups)
+- Auto-refresh when navigating to the History view
+
+### ⏰ Automated Maintenance
+- Windows Task Scheduler integration (`schtasks`) for daily silent scans
+- Headless mode: `python main.py --silent` scans all 18+ categories and reports recoverable space without deleting anything
+- `pythonw.exe` used for scheduled runs to avoid console flashes
+
+### 🧩 Auxiliary Engines
+- **Duplicate File Finder** — 3-step heuristic (size → partial hash → full SHA-256)
+- **Large File Auditor** — recursive scan for files above a size threshold
+- **Software Audit** — reads installed-program registry hives, discovers cache directories, reports large unused caches
+- **System Info** — `psutil`-based CPU/RAM/disk/OS overview
+
 ### 🛡 Security & Safety
-- Quarantine-first deletion: files backed up before removal
+- Sensitive-path protection (passwords, cookies, autofill, credentials, key files)
 - No shell injection (all filesystem ops use `pathlib`)
-- Admin-privilege detection and graceful degradation
+- Client + server image validation (magic bytes, size limit, format whitelist)
 - No cloud dependency — model runs 100% locally
 
 ---
@@ -291,17 +340,18 @@ AI-Powered-Windows-Cleaner/
 | **Charts** | pyqtgraph | Hardware-accelerated storage graphs |
 | **System Metrics** | psutil | Real-time CPU / RAM / Disk monitoring |
 | **File I/O** | pathlib + os | Safe, cross-version filesystem operations |
-| **AI Chat Client** | requests + QThread | Async HTTP to local FastAPI backend |
+| **AI Chat Client** | requests + QThread | Async HTTP + SSE streaming to local backend |
 | **AI Backend** | FastAPI + uvicorn | REST API inside Podman container |
-| **LLM Engine** | Ollama | Local model runner (llama3.2:1b) |
+| **LLM Engine** | Ollama | Local model runner (llama3.2:1b, llava:7b) |
 | **Containerisation** | Podman + podman-compose | Isolated AI sandbox via WSL2 |
 | **Database** | SQLite3 | Preferences, history, rollback logs |
-| **Testing** | Pytest + pytest-qt | Unit, integration, UI tests (>94% coverage) |
+| **Task Scheduling** | schtasks (win32) | Daily automated maintenance |
+| **Testing** | Pytest + pytest-qt | 134 tests passing (82% coverage) |
 | **Linting** | Ruff | Zero-warning code quality |
 | **Type Checking** | Mypy | 100% strictly typed codebase |
 | **Security** | Bandit | Zero vulnerabilities |
 | **Complexity** | Radon | Cyclomatic complexity enforcement |
-| **Packaging** | PyInstaller | Single-file Windows `.exe` distribution |
+| **Packaging** | PyInstaller | Windows `.exe` distribution |
 
 ---
 
@@ -327,10 +377,14 @@ pip install -r requirements.txt
 podman-compose up -d --build
 ```
 
-### Step 3 — Pull the AI Model (first time only)
+### Step 3 — Pull the AI Models (first time only)
 
 ```powershell
+# Text model (required for the AI Advisor)
 podman exec ai-powered-windows-cleaner_ollama_1 ollama pull llama3.2:1b
+
+# Optional: vision model (required for image / error-dialog analysis)
+podman exec ai-powered-windows-cleaner_ollama_1 ollama pull llava:7b
 ```
 
 ### Step 4 — Run the App
@@ -377,7 +431,7 @@ python src/ai_health_copilot/scripts/system_diagnosis.py
  AI WINDOWS HEALTH COPILOT - FULL SYSTEM DIAGNOSIS
 ==================================================
 Code Quality (Ruff)  : [PASS] No linting errors found
-Unit Tests (Pytest)  : [PASS] 36 passed in 5.58s
+Unit Tests (Pytest)  : [PASS] 134 passed, 2 skipped in 12.44s
 Architecture (Mypy)  : [PASS] Type checking passed
 Complexity (Radon)   : [PASS] Complexity within acceptable limits (A/B grades)
 --------------------------------------------------
@@ -391,7 +445,7 @@ OVERALL HEALTH SCORE : 100 / 100
 | Type Safety | Mypy | 100% typed |
 | Security | Bandit | 0 vulnerabilities |
 | Complexity | Radon | A/B grade only |
-| Test Coverage | Pytest | ≥ 94% |
+| Test Coverage | Pytest | ≥ 90% |
 
 ---
 
@@ -410,25 +464,17 @@ OVERALL HEALTH SCORE : 100 / 100
 - [x] **Phase 12:** Glassmorphic Windows 11 UI (win32mica Mica backdrop)
 - [x] **Phase 13:** Light mode & blue accent redesign + QLayout bug fix
 - [x] **Phase 14:** Full AI backend + frontend integration (QThread chat, live metrics injection)
+- [x] **Phase 15 (partial):** Streaming AI responses & multi-modal vision — [Plan](PHASE_15_PLAN.md)
+- [x] **Phase 16:** History & Rollback view (restore deleted files from quarantine)
 
 **Upcoming:**
-- [ ] **Phase 15:** Streaming AI responses (token-by-token display) — [Implementation Plan `PHASE_15_PLAN.md`](PHASE_15_PLAN.md)
-- [ ] **Phase 16:** History & Rollback view (restore deleted files)
+- [ ] **Phase 15 (rest):** Conversational memory (AI remembers previous interactions)
 - [ ] **Phase 17:** Settings view (AI model selector, scan targets, scheduler config)
+- [ ] **Phase 18:** Registry cleaner & more advanced cleanup modules
 
 ---
 
-## 🌟 Future Roadmap (Phases 15+)
-
-### Phase 15: Enhanced AI Capabilities
-- [x] **Streaming AI Responses** — Token-by-token display for better UX
-- [x] **Multi-modal Reasoning** — Support for image analysis of error dialogs
-- [ ] **Conversational Memory** — AI remembers previous interactions
-
-### Phase 16: History & Recovery System
-- [ ] **Visual History Timeline** — Interactive timeline of all cleanup actions
-- [ ] **One-Click Rollback** — Restore entire sessions with single click
-- [ ] **Snapshot System** — Create restore points before major operations
+## 🌟 Future Roadmap (Phases 17+)
 
 ### Phase 17: Comprehensive Settings
 - [ ] **AI Model Selector** — Switch between llama3.2, llama3.1, code-llama
@@ -436,10 +482,9 @@ OVERALL HEALTH SCORE : 100 / 100
 - [ ] **Scheduler Engine** — Recurring auto-clean, peak-hours aware
 
 ### Phase 18: Advanced Cleanup Modules
-- [ ] **Duplicate File Finder** — Content-aware duplicate detection
-- [ ] **Large File Auditor** — Identify oversized files wasting space
-- [ ] **Browser Cache Manager** — Chrome/Firefox/Edge cache cleanup
 - [ ] **Registry Cleaner** — Safe registry optimization
+- [ ] **Extended Browser Cache Manager** — Additional browsers & profiles
+- [ ] **Conversational Memory** — Persistent AI chat sessions
 
 ### Phase 19: Performance Optimization
 - [ ] **Startup Optimizer** — Manage Windows startup programs
@@ -463,9 +508,7 @@ OVERALL HEALTH SCORE : 100 / 100
 ## 👨‍💻 Author
 
 **Abdullah Al Mamun**  
-*BSc, MSc — Software Engineering*  
-TU Wien (Vienna, Austria) & Daffodil International University  
+*M.Sc. in Software Engineering* — TU Wien (Vienna University of Technology), Vienna, Austria  
+*B.Sc. in Software Engineering* — Daffodil International University  
 📧 mamun.swe.de@gmail.com | 🌐 [github.com/abbysweb](https://github.com/abbysweb)  
 🎓 ORCID: [0009-0006-7473-0024](https://orcid.org/0009-0006-7473-0024)
-
-
